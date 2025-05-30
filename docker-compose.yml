@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  php:
+    build:
+      context: ./.docker/php8
+    container_name: bi-ufgd-app
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./.docker/php8/local.ini:/usr/local/etc/php/local.ini
+      - ./.docker/php8/apache2/logs:/var/log/apache2
+      - ./.docker/php8/apache2/sites:/etc/apache2/sites-available
+    ports:
+      - "8080:80"
+    networks:
+      - bi-ufgd-network
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+  postgres:
+    image: postgres
+    container_name: bi-ufgd-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "W85gpwQIKk8j9cGv"
+      POSTGRES_PASSWORD: "TyCOSUCnmeWV0tJ4GC2QjqhlDv62BRee"
+      POSTGRES_DB : "bi_ufgd"
+    ports:
+      - "5432:5432"
+    volumes:
+      - bi-ufgd-postgres_data:/var/lib/postgresql/data
+    networks:
+      - bi-ufgd-network
+
+  mysql:
+    container_name: datawarehouse-mysql
+    image: 'mysql/mysql-server:8.0'
+    ports:
+        - '${FORWARD_DB_PORT:-3306}:3306'
+    environment:
+        MYSQL_ROOT_PASSWORD: root-pass
+        MYSQL_ROOT_HOST: '%'
+        MYSQL_DATABASE: bi_ufgd-dw
+        MYSQL_USER: user-user
+        MYSQL_PASSWORD: user-pass
+        MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    volumes:
+        - 'bi-ufgd-mysql:/var/lib/mysql'
+    networks:
+        - bi-ufgd-network
+    healthcheck:
+        test:
+            - CMD
+            - mysqladmin
+            - ping
+            - '-proot-pass'
+        retries: 3
+        timeout: 5s
+
+  redis:
+    image: redis:alpine
+    platform: linux/arm64
+    container_name: bi-ufgd-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - bi-ufgd-redis_data:/data
+    networks:
+      - bi-ufgd-network
+    
+networks:
+  bi-ufgd-network:
+    driver: bridge
+
+volumes:
+  bi-ufgd-postgres_data:
+    driver: local
+  bi-ufgd-mysql:
+    driver: local
+  bi-ufgd-redis_data:
+    driver: local
