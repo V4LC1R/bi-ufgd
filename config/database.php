@@ -71,7 +71,7 @@ return [
             'url' => env('DW_URL'),
             'host' => env('DW_HOST', '127.0.0.1'),
             'port' => env('DW_PORT', '3306'),
-            'database' => env('DW_DATABASE', 'laravel'),
+            'database' => env('DW_POS_DATABASE', 'laravel'),
             'username' => env('DW_USERNAME', 'root'),
             'password' => env('DW_PASSWORD', ''),
             'unix_socket' => env('DW_SOCKET', ''),
