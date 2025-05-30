@@ -6,11 +6,10 @@ use Illuminate\Foundation\Configuration\Middleware;
 use App\Infrastructure\Http\Kernel as HttpKernel;
 use App\Infrastructure\Console\Kernel as ConsoleKernel;
 
-return Application::configure(basePath: dirname(__DIR__,3))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
-        health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Adicione middlewares globais se necessário
@@ -19,3 +18,7 @@ return Application::configure(basePath: dirname(__DIR__,3))
         
     })
     ->create();
+
+$app->useEnvironmentPath(dirname(__DIR__,3));
+
+return $app;
