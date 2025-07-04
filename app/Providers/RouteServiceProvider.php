@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Providers;
 
 use Illuminate\Support\Facades\File;
@@ -30,10 +29,10 @@ class RouteServiceProvider extends ServiceProvider
                     ->group($routesPath . '/api.php');
             }
 
-            if (File::exists($routesPath . '/web.php')) {
-                Route::middleware('web')
-                    ->group($routesPath . '/web.php');
-            }
+            // if (File::exists($routesPath . '/web.php')) {
+            //     Route::middleware('web')
+            //         ->group($routesPath . '/web.php');
+            // }
         }
     }
 }
