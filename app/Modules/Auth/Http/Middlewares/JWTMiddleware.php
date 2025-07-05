@@ -1,5 +1,5 @@
 <?php
-namespace App\Units\Core\Http\Middleware;
+namespace App\Modules\Auth\Http\Middlewares;
 
 use Closure;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;

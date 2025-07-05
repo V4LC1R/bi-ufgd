@@ -6,6 +6,7 @@ use App\Modules\Auth\Http\Request\ChangePasswordRequest;
 use App\Modules\Auth\Http\Request\LoginRequest;
 use App\Modules\Auth\Http\Request\RequestChangePasswordRequest;
 use App\Modules\Auth\Http\Request\SignUpRequest;
+use App\Modules\Auth\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController
@@ -28,15 +29,16 @@ class AuthController
         ]);
     }
 
-    public function singUp(SignUpRequest $request)
+    public function signUp(SignUpRequest $request,AuthService $userService)
     {
-        // $user = $service->create($request);
+        $user = $userService->createUser($request->toDTO());
     
-        // $token = Auth::setTTL(600)->login($user);
-        // return response()->json([
-        //     'user' => $user,
-        //     'token' => $token
-        // ]);
+        $token = Auth::setTTL(600)->login($user);
+        
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ]);
     }
 
 

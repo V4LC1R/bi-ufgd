@@ -22,4 +22,15 @@ class SignUpDTO
             name: $data['name'],
         );
     }
+
+    public function toArray(): array
+    {
+        return [
+            'password'   => $this->password,
+            'document'   => $this->document,
+            'entity_id'  => $this->entity_id,
+            'email'      => $this->email,
+            'name'       => $this->name,
+        ];
+    }
 }

@@ -8,5 +8,5 @@ Route::get('/', function () {
 });
 
 Route::get('so-corno',function () {
-    return response()->json(["message"=>"Sou foda!"]);
+    return response()->json(["message"=>"Sou foda!!!"]);
 });

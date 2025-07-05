@@ -22,17 +22,12 @@ class RouteServiceProvider extends ServiceProvider
         foreach ($modules as $modulePath) {
             $moduleName = basename($modulePath);
             $routesPath = $modulePath . '/Routes';
-
+            
             if (File::exists($routesPath . '/api.php')) {
                 Route::prefix(strtolower($moduleName))
                     ->middleware('api')
                     ->group($routesPath . '/api.php');
             }
-
-            // if (File::exists($routesPath . '/web.php')) {
-            //     Route::middleware('web')
-            //         ->group($routesPath . '/web.php');
-            // }
         }
     }
 }
