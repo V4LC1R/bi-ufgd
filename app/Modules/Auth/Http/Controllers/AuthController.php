@@ -22,6 +22,7 @@ class AuthController
         }
 
         $user = Auth::user();
+        unset($user["password"]);
 
         return response()->json([
             'user' => $user,
@@ -34,6 +35,8 @@ class AuthController
         $user = $userService->createUser($request->toDTO());
     
         $token = Auth::setTTL(600)->login($user);
+
+        unset($user["password"]);
         
         return response()->json([
             'user' => $user,
