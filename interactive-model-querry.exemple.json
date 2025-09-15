@@ -1,0 +1,37 @@
+{
+    "database":"graduacao",
+    "dimensions":[
+         {
+            "table": "First",
+            "columns": ["id", "name"],
+            "filter": {
+                "id": { "op": "=", "value": 10 }
+            },
+            "order":{
+                "id":"desc"
+            }
+        }
+    ],
+    "sub-dimension":[ 
+        {
+            "table": "First",
+            "columns": ["id", "name"],
+            "filter": {
+                "id": { "op": "=", "value": 10 }
+            },
+            "order":{
+                "id":"desc"
+            }
+        }
+    ],
+    "fact":{
+        "colunms":{
+            "colunm_a":{
+                "operation":["avg","sum",":list"],
+                "filter": {
+                    "avg": { "op": ">", "value": 5 ,"order":"desc"}
+                }
+            } 
+        }
+    }
+}
