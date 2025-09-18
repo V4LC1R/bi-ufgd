@@ -22,4 +22,14 @@ class DimensionDTO
         $this->filter = $data['filter'] ?? null;
         $this->order = $data['order'] ?? null;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'table'   => $this->table,
+            'columns' => $this->columns,
+            'filter'  => $this->filter,
+            'order'   => $this->order,
+        ];
+    }
 }

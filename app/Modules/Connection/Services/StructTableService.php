@@ -1,26 +1,64 @@
 <?
 namespace App\Modules\Connection\Services;
-use App\Modules\Connection\Contracts\StructTableContract;
+use App\Modules\Connection\Contracts\IStructTable;
 use App\Modules\Connection\Http\DTOs\TableDTO;
 use App\Modules\Connection\Models\Connection;
 use App\Modules\Connection\Models\Tables;
 
-class StructTableService implements StructTableContract
+class StructTableService implements IStructTable
 {
     protected ?string $connectionName = null;
     
     /** @var TableDTO[] */
     protected array $tables = [];
     protected array $roles = [];
+    protected $connection = null;
 
-    public function setConnectionName(string $connectionName): void
+    public function setConnectionName(string $connectionName): self
     {
         //poder resetar a lista de tabelas
         $this->tables = [];
+        $this->connection = null;
         $this->connectionName = $connectionName;
+
+        return $this;
     }
-    
-     /**
+
+    /**
+     * Retorna colunas de uma tabela
+     * @param string $table
+     * @return array ['id' => 'int:pk', 'name' => 'varchar:255']
+     */
+    public function getColumns(string $table): array
+    {
+        return $this->getTables()[$table]->columns ?? [];
+    }
+
+    public function getConnection()
+    {
+        
+        if($this->connection)
+            return $this->connection;
+
+        if(!$this->connection){
+            $this->connection = Connection::select(['id','type'])
+                ->where('name', $this->connectionName)
+                ->first();
+        }
+        
+        if(!$this->connection)
+            throw new \Exception("Connection not found!");
+
+        return $this->connection;
+    }
+
+
+    public function getDriver(): string
+    {
+        return $this->getConnection()->type ?? '';
+    }
+
+    /**
      * Retorna as tabelas e suas estruturas
      *
      * @return array ['First', 'Main', ...]
@@ -33,16 +71,10 @@ class StructTableService implements StructTableContract
         if(count($this->tables) > 0)
             return $this->tables;
 
-         $connection = Connection::select('id')
-            ->where('name', $this->connectionName)
-            ->first();
-
-        if (!$connection) {
-            return [];
-        }
+        $this->getConnection();
 
         $tables = Tables::select(['name', 'alias', 'struct','type'])
-            ->where('connection_id', $connection->id)
+            ->where('connection_id', $this->connection->id)
             ->get();
 
         foreach ($tables as $table) {
@@ -60,18 +92,6 @@ class StructTableService implements StructTableContract
         }
 
         return $this->roles;
-    }
-
-    /**
-     * Retorna colunas de uma tabela
-     * @param string $table
-     * @return array ['id' => 'int:pk', 'name' => 'varchar:255']
-     */
-    public function getColumns(string $table): array
-    {
-        $tables = $this->getTables();
-
-        return $tables[$table]->columns ?? [];
     }
 
     /**

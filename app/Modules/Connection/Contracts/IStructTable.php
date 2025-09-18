@@ -1,13 +1,13 @@
 <?
 namespace App\Modules\Connection\Contracts;
 
-interface StructTableContract 
+interface IStructTable
 {
     /**
      * Seleciona a conexão pelo nome cadastrado
      * Ex: "graduacao", "financeiro"
      */
-    public function setConnectionName(string $connectionName): void;
+    public function setConnectionName(string $connectionName): self;
     
      /**
      * Retorna lista de tabelas disponíveis no banco.
@@ -31,5 +31,9 @@ interface StructTableContract
     public function getRelations(string $table): array;
 
     public function getStructConnection(): array;
+
+    public function getConnection();
+
+    public function getDriver():string;
 
 }

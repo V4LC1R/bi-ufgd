@@ -24,7 +24,7 @@ class ConnectionRequest extends FormRequest
 
             'tables' => ['required', 'array', 'min:1'],
             'tables.*.type' => ['required', 'string', 'in:dimension,sub-dimension,fact'],
-            'tables.*.tableName' => ['required', 'string'],
+            'tables.*.name' => ['required', 'string'],
             'tables.*.alias' => ['required', 'string'],
             'tables.*.struct' => ['required', 'array', 'min:1'],
 

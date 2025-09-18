@@ -20,7 +20,7 @@ class ValidatePreSqlService
         
         $this->dimensions($roles['sub-dimension'] ?? [],$pre_sql->subDimensions);
 
-        $this->fact($roles['fact'] ?? [],$pre_sql->fact);
+        $this->fact(array_values($roles['fact'])[0] ?? [],$pre_sql->fact);
         
         return $this;
     }
@@ -29,6 +29,7 @@ class ValidatePreSqlService
     {
         return $this->errors;
     }
+
     /**
      * @param array<string, TableDTO> $struct
      * @param  array<DimensionDTO> $dimensions_pre_sql
@@ -39,46 +40,70 @@ class ValidatePreSqlService
         foreach ($dimensions_pre_sql as $pre_sql) {
 
             if (!isset($struct[$pre_sql->table])) {
-                $this->errors[] = "Table '{$pre_sql->table}' not found in connection struct.";
+                $this->errors["dimension-{$pre_sql->table}"][] = "Table '{$pre_sql->table}' not found in connection struct.";
                 continue;
             }
-             $cols = array_merge(
-                $pre_sql->columns,
-                array_keys($pre_sql->filter ?? []),
-                array_keys($pre_sql->order ?? [])
-            );
 
             $table = $struct[$pre_sql->table];
-            $table_cols = array_keys($table->columns);
-            $this->validateField($cols, $table_cols);
-            $this->validateTypeField($pre_sql->filter,$table->columns);
+        
+            $this->validateTypeField($table,$pre_sql->filter);
         }
     }
 
 
-    private function fact( array $struct, FactDTO $fact_pre_sql):bool
+    private function fact( TableDTO $struct, FactDTO $fact_pre_sql)
     {
-        return true;
-    }
+        
+        $cols_spect = array_keys($fact_pre_sql->columns);
 
-    protected function validateField(array $cols_espec,array $table_cols)
-    {
-       $missing = array_diff($cols_espec, $table_cols);
+        if(!$fact_pre_sql->limit)
+            $this->errors["fact"][] = "Limit to Querry is not Found";
 
-        foreach ($missing as $col) {
-            $this->errors[] = "Column '{$col}' not found in table.";
+        foreach ($cols_spect as $col_spec) {
+            
+            if(!array_key_exists($col_spec,$struct->columns))
+            {
+                $this->errors["fact"][] = "Column '{$col_spec}' not found in fact table.";
+                continue;
+            }
+
+            $col = $struct->columns[$col_spec];
+            $op = $fact_pre_sql->columns[$col_spec]->aggregates;
+            
+            $this->validateFieldAgregations($col_spec, $col,$op);
         }
     }
 
-    protected function validateTypeField(array $filter, array $table_cols): void
+    protected function validateTypeField( TableDTO $table, array $filter): void
     {
         foreach ($filter as $col => $condition) {
-           
-            $expectedType = explode(":", $table_cols[$col])[0]; // pega só 'number', 'string', 'date', etc.
+
+            if(!array_key_exists($col,$table->columns))
+            {
+                $this->errors[$table->name][] = "Column '{$col}' not found in table in {$table->name} table.";
+                continue;
+            }
+
+            $col_table = $table->columns[$col];
+
+            $expectedType = explode(":", $col_table)[0]; // pega só 'number', 'string', 'date', etc.
             $value = $condition['value'] ?? null;
 
-            if (!$this->checkType($expectedType, $value)) {
-                $this->errors[] = "Invalid type for column '{$col}'. Expected {$expectedType}, got " . gettype($value);
+            if (!$this->checkType($expectedType, $value))
+                $this->errors[$table->name][] = "Invalid type for column '{$col}'. Expected {$expectedType}, got " . gettype($value);
+            
+        }
+    }
+
+    protected function validateFieldAgregations(string $colName, string $colDefinition, array $aggregates): void
+    {
+        $parts = explode(":", $colDefinition);
+        $colType = $parts[0]; // tipo real da coluna
+
+        foreach ($aggregates as $agg) {
+            if (in_array($agg, ['count', ':list'])) continue;
+            if (in_array($agg, ['sum','avg']) && $colType !== 'number') {
+                $this->errors['fact'][] = "Agregate '{$agg}' cannot be applied to column '{$colName}' of type '{$colType}'.";
             }
         }
     }

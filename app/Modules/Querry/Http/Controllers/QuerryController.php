@@ -3,10 +3,8 @@ namespace App\Modules\Querry\Http\Controllers;
 
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 use App\Modules\Querry\Http\Requests\QuerryRequest;
-use Illuminate\Http\Client\Request;
+use App\Modules\Querry\Services\QuerryService;
 use Illuminate\Routing\Controller;
-use QuerryService;
-
 class QuerryController extends Controller
 {
 

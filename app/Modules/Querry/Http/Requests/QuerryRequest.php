@@ -14,7 +14,7 @@ class QuerryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'database' => ['required', 'string'],
+            'connectionName' => ['required', 'string'],
 
             // Dimensions
             'dimensions' => ['nullable', 'array'],

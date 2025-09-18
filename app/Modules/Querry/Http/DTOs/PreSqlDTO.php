@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 
 class PreSqlDTO
 {
-    public string $database;
+    public string $connectionName;
 
     /** @var DimensionDTO[] */
     public array $dimensions = [];
@@ -14,11 +14,11 @@ class PreSqlDTO
     /** @var DimensionDTO[] */
     public array $subDimensions = [];
 
-    public ?FactDTO $fact = null;
+    public FactDTO $fact = null;
 
     public function __construct(array $data)
     {
-        $this->database = $data['database'] ?? '';
+        $this->connectionName = $data['connectionName'] ?? '';
 
         // Mapeia dimensões
         if (!empty($data['dimensions'])) {
@@ -38,5 +38,15 @@ class PreSqlDTO
         if (!empty($data['fact'])) {
             $this->fact = new FactDTO($data['fact']);
         }
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'connectionName' => $this->connectionName,
+            'dimensions' => array_map(fn (DimensionDTO $d) => $d->toArray(), $this->dimensions),
+            'sub-dimension' => array_map(fn (DimensionDTO $sd) => $sd->toArray(), $this->subDimensions),
+            'fact' => $this->fact ? $this->fact->toArray() : null,
+        ];
     }
 }
