@@ -15,12 +15,15 @@ class DimensionDTO
     /** @var array|null */
     public ?array $order = null;
 
+    public array $alias = [];
+
     public function __construct(array $data)
     {
         $this->table = $data['table'] ?? '';
         $this->columns = $data['columns'] ?? [];
-        $this->filter = $data['filter'] ?? null;
-        $this->order = $data['order'] ?? null;
+        $this->filter = $data['filter'] ?? [];
+        $this->order = $data['order'] ?? [];
+        $this->alias = $data['alias'] ?? [];
     }
 
     public function toArray(): array

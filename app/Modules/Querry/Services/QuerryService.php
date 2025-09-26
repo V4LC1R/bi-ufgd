@@ -1,4 +1,4 @@
-<?
+<?php
 namespace App\Modules\Querry\Services;
 
 use App\Modules\Connection\Contracts\IStructTable;

@@ -30,7 +30,7 @@ class ConnectionService
                         'connection_id'=>$connection->id,
                         'name'=>$table->name,
                         'alias'=>$table->alias, 
-                        'struct'=>json_encode($table->columns),
+                        'columns'=>json_encode($table->columns),
                         'type'=>$table->type
                     ];
                 }

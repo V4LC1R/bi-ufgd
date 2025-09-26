@@ -15,12 +15,12 @@ class Tables extends Model
         'connection_id',
         'name',
         'alias',
-        'struct',
+        'columns',
         'type'
     ];
 
     protected $casts = [
-        'struct' => 'array',
+        'columns' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

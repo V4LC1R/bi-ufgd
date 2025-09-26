@@ -14,7 +14,7 @@ class TableDTO
     {
         $this->name = $data['name'] ?? '';
         $this->alias = $data['alias'] ?? '';
-        $this->columns = $data['struct'] ?? [];
+        $this->columns = $data['columns'] ?? [];
         $this->type = $data['type'];
     }
 }

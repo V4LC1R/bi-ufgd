@@ -1,6 +1,7 @@
 <?
 namespace App\Modules\Connection\Contracts;
 
+use App\Modules\Connection\Http\DTOs\TableDTO;
 interface IStructTable
 {
     /**
@@ -30,6 +31,9 @@ interface IStructTable
      */
     public function getRelations(string $table): array;
 
+    /**
+     * @return array<string, array<string, TableDTO>>
+     */
     public function getStructConnection(): array;
 
     public function getConnection();

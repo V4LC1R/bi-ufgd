@@ -1,4 +1,4 @@
-<?
+<?php
 namespace App\Modules\Querry\Jobs;
 
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;

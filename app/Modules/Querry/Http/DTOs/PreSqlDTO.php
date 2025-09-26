@@ -14,12 +14,11 @@ class PreSqlDTO
     /** @var DimensionDTO[] */
     public array $subDimensions = [];
 
-    public FactDTO $fact = null;
+    public ?FactDTO $fact;
 
     public function __construct(array $data)
     {
         $this->connectionName = $data['connectionName'] ?? '';
-
         // Mapeia dimensões
         if (!empty($data['dimensions'])) {
             foreach ($data['dimensions'] as $dim) {
@@ -33,7 +32,7 @@ class PreSqlDTO
                 $this->subDimensions[] = new DimensionDTO($subDim);
             }
         }
-
+        
         // Mapeia fact
         if (!empty($data['fact'])) {
             $this->fact = new FactDTO($data['fact']);
@@ -46,7 +45,7 @@ class PreSqlDTO
             'connectionName' => $this->connectionName,
             'dimensions' => array_map(fn (DimensionDTO $d) => $d->toArray(), $this->dimensions),
             'sub-dimension' => array_map(fn (DimensionDTO $sd) => $sd->toArray(), $this->subDimensions),
-            'fact' => $this->fact ? $this->fact->toArray() : null,
+            'fact' => $this->fact ? $this->fact->toArray() : [],
         ];
     }
 }

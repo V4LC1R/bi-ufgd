@@ -16,57 +16,72 @@ class QuerryRequest extends FormRequest
         return [
             'connectionName' => ['required', 'string'],
 
-            // Dimensions
-            'dimensions' => ['nullable', 'array'],
+            'fact' => ['required', 'array'],
+            'fact.limit' => ['required', 'integer', 'min:0'],
+            'fact.columns' => ['required', 'array', 'size:1'],
+
+            'fact.columns.*.aggregates' => ['sometimes', 'array'],
+            'fact.columns.*.aggregates.*' => ['string'],
+
+            'fact.columns.*.linear' => ['sometimes', 'array'],
+            'fact.columns.*.linear.*' => ['string'],
+
+            'fact.columns.*.as' => ['sometimes', 'array'],
+            'fact.columns.*.as.*' => ['string'],
+
+            'fact.columns.*.filter' => ['sometimes', 'array'],
+
+            'dimensions' => ['sometimes', 'array'],
             'dimensions.*.table' => ['required_with:dimensions', 'string'],
             'dimensions.*.columns' => ['required_with:dimensions', 'array', 'min:1'],
-            'dimensions.*.columns.*' => ['string'],
-            'dimensions.*.filter' => ['nullable', 'array'],
-            'dimensions.*.filter.*.op' => ['required_with:dimensions.*.filter', 'string'],
-            'dimensions.*.filter.*.value' => ['nullable'],
-            'dimensions.*.order' => ['nullable', 'array'],
-            'dimensions.*.order.*' => ['in:asc,desc'],
 
-            // Sub-dimensions
-            'sub-dimension' => ['nullable', 'array'],
+            'sub-dimension' => ['sometimes', 'array'],
             'sub-dimension.*.table' => ['required_with:sub-dimension', 'string'],
             'sub-dimension.*.columns' => ['required_with:sub-dimension', 'array', 'min:1'],
-            'sub-dimension.*.columns.*' => ['string'],
-            'sub-dimension.*.filter' => ['nullable', 'array'],
-            'sub-dimension.*.filter.*.op' => ['required_with:sub-dimension.*.filter', 'string'],
-            'sub-dimension.*.filter.*.value' => ['nullable'],
-            'sub-dimension.*.order' => ['nullable', 'array'],
-            'sub-dimension.*.order.*' => ['in:asc,desc'],
-
-            // Fact
-            'fact' => ['required', 'array'],
-            'fact.colunms' => ['required', 'array'],
-            'fact.colunms.*' => ['required', 'array'],
-            'fact.colunms.*.operation' => ['required', 'array', 'min:1'],
-            'fact.colunms.*.operation.*' => ['string'], // aceita avg,sum,:list,:arg
-            'fact.colunms.*.filter' => ['nullable', 'array'],
-            'fact.colunms.*.filter.*.op' => ['required_with:fact.colunms.*.filter', 'string'],
-            'fact.colunms.*.filter.*.value' => ['nullable'],
-            'fact.colunms.*.filter.*.order' => ['nullable', 'in:asc,desc'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'database.required' => 'O campo database é obrigatório.',
+            'connectionName.required' => 'O campo connectionName é obrigatório.',
+            'connectionName.string' => 'O campo connectionName deve ser uma string.',
 
-            'dimensions.*.table.required_with' => 'Cada dimensão precisa ter uma tabela.',
-            'dimensions.*.columns.required_with' => 'Cada dimensão precisa ter colunas.',
-            'dimensions.*.order.*.in' => 'A ordenação só pode ser asc ou desc.',
+            'fact.required' => 'O campo fact é obrigatório.',
+            'fact.array' => 'O campo fact deve ser um array.',
 
-            'sub-dimension.*.table.required_with' => 'Cada sub-dimensão precisa ter uma tabela.',
-            'sub-dimension.*.columns.required_with' => 'Cada sub-dimensão precisa ter colunas.',
-            'sub-dimension.*.order.*.in' => 'A ordenação só pode ser asc ou desc.',
+            'fact.limit.required' => 'O campo fact.limit é obrigatório.',
+            'fact.limit.integer' => 'O campo fact.limit deve ser um número inteiro.',
+            'fact.limit.min' => 'O campo fact.limit deve ser maior ou igual a 0.',
 
-            'fact.colunms.required' => 'É obrigatório definir colunas no fact.',
-            'fact.colunms.*.operation.required' => 'Cada coluna do fact precisa ter ao menos uma operação.',
-            'fact.colunms.*.filter.*.order.in' => 'A ordenação no fact só pode ser asc ou desc.',
+            'fact.columns.required' => 'O campo fact.columns é obrigatório.',
+            'fact.columns.array' => 'O campo fact.columns deve ser um array.',
+            'fact.columns.size' => 'O campo fact.columns deve conter exatamente 1 item.',
+
+            'fact.columns.*.aggregates.array' => 'O campo agg deve ser um array.',
+            'fact.columns.*.aggregates.*.string' => 'Cada item de agg deve ser uma string.',
+
+            'fact.columns.*.linear.array' => 'O campo linear deve ser um array.',
+            'fact.columns.*.linear.*.string' => 'Cada item de linear deve ser uma string.',
+
+            'fact.columns.*.as.array' => 'O campo as deve ser um array.',
+            'fact.columns.*.as.*.string' => 'Cada item de as deve ser uma string.',
+
+            'fact.columns.*.filter.array' => 'O campo filter deve ser um array.',
+
+            'dimensions.array' => 'O campo dimensions deve ser um array.',
+            'dimensions.*.table.required_with' => 'O campo table é obrigatório em dimensions.',
+            'dimensions.*.table.string' => 'O campo table em dimensions deve ser uma string.',
+            'dimensions.*.columns.required_with' => 'O campo columns é obrigatório em dimensions.',
+            'dimensions.*.columns.array' => 'O campo columns em dimensions deve ser um array.',
+            'dimensions.*.columns.min' => 'O campo columns em dimensions deve ter pelo menos 1 item.',
+
+            'sub-dimension.array' => 'O campo sub-dimension deve ser um array.',
+            'sub-dimension.*.table.required_with' => 'O campo table é obrigatório em sub-dimension.',
+            'sub-dimension.*.table.string' => 'O campo table em sub-dimension deve ser uma string.',
+            'sub-dimension.*.columns.required_with' => 'O campo columns é obrigatório em sub-dimension.',
+            'sub-dimension.*.columns.array' => 'O campo columns em sub-dimension deve ser um array.',
+            'sub-dimension.*.columns.min' => 'O campo columns em sub-dimension deve ter pelo menos 1 item.',
         ];
     }
 }

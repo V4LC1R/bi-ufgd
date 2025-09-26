@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('alias')->nullable();
             $table->string('type')->nullable();
-            $table->jsonb('struct')->nullable();
+            $table->jsonb('columns')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

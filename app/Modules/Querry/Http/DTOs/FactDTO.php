@@ -13,8 +13,8 @@ class FactDTO
     {
         $this->limit = $data["limit"] ?? 0;
 
-        if (!empty($data['colunms'])) { // Preservando o typo do JSON "colunms"
-            foreach ($data['colunms'] as $name => $colData) {
+        if (!empty($data['columns'])) { // Preservando o typo do JSON "colunms"
+            foreach ($data['columns'] as $name => $colData) {
                 $this->columns[$name] = new FactColumnDTO($name, $colData);
             }
         }
@@ -28,7 +28,7 @@ class FactDTO
         }
 
         return [
-            'colunms' => $columns,
+            'columns' => $columns,
             'limit'   => $this->limit,
         ];
     }

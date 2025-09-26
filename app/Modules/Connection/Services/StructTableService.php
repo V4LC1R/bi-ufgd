@@ -73,7 +73,7 @@ class StructTableService implements IStructTable
 
         $this->getConnection();
 
-        $tables = Tables::select(['name', 'alias', 'struct','type'])
+        $tables = Tables::select(['name', 'alias', 'columns','type'])
             ->where('connection_id', $this->connection->id)
             ->get();
 
@@ -84,6 +84,10 @@ class StructTableService implements IStructTable
         return $this->tables;
     }
 
+    /**
+     * Summary of getStructConnection
+     * @return array<string, array<string,TableDTO[]>> $roles
+     */
     public function getStructConnection():array
     {
         $this->roles = [];
@@ -112,4 +116,5 @@ class StructTableService implements IStructTable
 
         return $relations;
     }
+
 }

@@ -9,24 +9,32 @@ class FactColumnDTO
     /** @var string[] operações: avg, sum, list etc */
     public array $aggregates = [];
 
-    /** @var array|null filtros por operação */
-    public ?array $filter = null;
+    /** @var string[] operações: avg, sum, list etc */
+    public array $linear = [];
 
-    public ?array $as = null;
+    /** @var array|null filtros por operação */
+    public array $filter = [];
+
+    public array $alias = [];
+
+    
     public function __construct(string $name, array $data)
     {
         $this->name = $name;
-        $this->as = $data['as'] ?? null;
-        $this->aggregates = $data['agg'] ?? [];
-        $this->filter = $data['filter'] ?? null;
+        $this->alias = $data['alias'] ?? [];
+        $this->aggregates = $data['aggregates'] ?? [];
+        $this->linear = $data['linear'] ?? [];
+        $this->filter = $data['filter'] ?? [];
     }
 
     public function toArray(): array
     {
         return [
             'name'       => $this->name,
-            'aggregates'  => $this->aggregates,
-            'filter'     => $this->filter
+            'aggregates' => $this->aggregates,
+            'linear'     => $this->linear,
+            'filter'     => $this->filter,
+            'alias'      => $this->alias 
         ];
     }
 }

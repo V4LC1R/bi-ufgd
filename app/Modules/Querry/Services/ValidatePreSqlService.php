@@ -1,4 +1,4 @@
-<?
+<?php
 namespace App\Modules\Querry\Services;
 
 use App\Modules\Connection\Http\DTOs\TableDTO;
@@ -9,9 +9,16 @@ use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 class ValidatePreSqlService
 {
     private array $errors = [];
+    private array $stack_aliases = [];
+
+
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
 
     /**
-    * @param array<string, TableDTO[]> $roles
+    * @param array<string, array<string,TableDTO[]>> $roles
     * @param PreSqlDTO $pre_sql
     */
     public function compare(array $roles,PreSqlDTO $pre_sql): ValidatePreSqlService
@@ -23,11 +30,6 @@ class ValidatePreSqlService
         $this->fact(array_values($roles['fact'])[0] ?? [],$pre_sql->fact);
         
         return $this;
-    }
-
-    public function getErrors(): array
-    {
-        return $this->errors;
     }
 
     /**
@@ -47,30 +49,64 @@ class ValidatePreSqlService
             $table = $struct[$pre_sql->table];
         
             $this->validateTypeField($table,$pre_sql->filter);
+   
         }
     }
 
 
     private function fact( TableDTO $struct, FactDTO $fact_pre_sql)
     {
-        
         $cols_spect = array_keys($fact_pre_sql->columns);
 
         if(!$fact_pre_sql->limit)
-            $this->errors["fact"][] = "Limit to Querry is not Found";
+            $this->errors["fact"]['table'][] = "Limit to Querry is not Found";
 
         foreach ($cols_spect as $col_spec) {
             
             if(!array_key_exists($col_spec,$struct->columns))
             {
-                $this->errors["fact"][] = "Column '{$col_spec}' not found in fact table.";
+                $this->errors["fact"]['table'][] = "Column '{$col_spec}' not found in fact table.";
                 continue;
             }
 
             $col = $struct->columns[$col_spec];
-            $op = $fact_pre_sql->columns[$col_spec]->aggregates;
+            $fact_cols_pre_sql = $fact_pre_sql->columns[$col_spec];
+            $actions = array_merge(
+                $fact_cols_pre_sql->aggregates ?? [],
+                $fact_cols_pre_sql->linear ?? []
+            );
             
-            $this->validateFieldAgregations($col_spec, $col,$op);
+            $this->validateColumnActions( $col,$actions,$col_spec);
+           ;
+        }
+    }
+
+    public function validateColumnActions(string $col_definition, array $actions, string $col_name): void
+    {
+        $parts = explode(":", $col_definition);
+        $col_type = $parts[0];
+
+        $type_ops = [
+            'number' => ['sum','avg','min','max','gt','lt','gt-eq','lt-eq','eq','count',':range',':list','df'],
+            'string' => ['eq','count','df'],
+            'date'   => ['eq','count',':range',':list'],
+            'datetime' => ['eq','count',':range',':list'],
+            'time' =>  ['eq','count',':range',':list'],
+            'bool' => ['eq','df',':list']
+        ];
+
+        if (!isset($type_ops[$col_type])) {
+            $this->errors['fact']['column'][$col_name][] = "Unknown column type '{$col_type}' for column '{$col_name}'.";
+            return;
+        }
+
+        $type_ops_for_col = $type_ops[$col_type] ?? [];
+
+        foreach ($actions as $act) {
+            if (!in_array($act, $type_ops_for_col)) {
+                $this->errors['fact']['column'][$col_name][] = "Action '{$act}' cannot be applied to column '{$col_name}' of type '{$col_type}'.";
+            } 
+            
         }
     }
 
@@ -80,46 +116,32 @@ class ValidatePreSqlService
 
             if(!array_key_exists($col,$table->columns))
             {
-                $this->errors[$table->name][] = "Column '{$col}' not found in table in {$table->name} table.";
+                $this->errors['dimensions']['table'][$table->name][] = "Column '{$col}' not found in table in {$table->name} table.";
                 continue;
             }
 
             $col_table = $table->columns[$col];
 
-            $expectedType = explode(":", $col_table)[0]; // pega só 'number', 'string', 'date', etc.
+            $expected_type = explode(":", $col_table)[0]; // pega só 'number', 'string', 'date', etc.
             $value = $condition['value'] ?? null;
 
-            if (!$this->checkType($expectedType, $value))
-                $this->errors[$table->name][] = "Invalid type for column '{$col}'. Expected {$expectedType}, got " . gettype($value);
-            
+            if (!$this->checkType($expected_type, $value))
+                $this->errors['dimensions']['table'][$table->name][] = "Invalid type for column '{$col}'. Expected {$expected_type}, got " . gettype($value);
         }
     }
-
-    protected function validateFieldAgregations(string $colName, string $colDefinition, array $aggregates): void
-    {
-        $parts = explode(":", $colDefinition);
-        $colType = $parts[0]; // tipo real da coluna
-
-        foreach ($aggregates as $agg) {
-            if (in_array($agg, ['count', ':list'])) continue;
-            if (in_array($agg, ['sum','avg']) && $colType !== 'number') {
-                $this->errors['fact'][] = "Agregate '{$agg}' cannot be applied to column '{$colName}' of type '{$colType}'.";
-            }
-        }
-    }
-
 
     private function checkType(string $expected, mixed $value): bool
     {
         return match($expected) {
             'number'   => is_numeric($value),
             'string'   => is_string($value),
-            'date',
+            'date' => strtotime($value) !== false,
             'datetime' => strtotime($value) !== false,
             'time'     => preg_match('/^\d{2}:\d{2}(:\d{2})?$/', (string)$value),
             'bool'     => is_bool($value) || $value === 0 || $value === 1,
-            default    => false // fallback, deixa passar
+            default    => false // nada passa
         };
     }
+
 
 }

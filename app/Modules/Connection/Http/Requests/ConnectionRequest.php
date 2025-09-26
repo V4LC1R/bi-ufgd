@@ -26,10 +26,10 @@ class ConnectionRequest extends FormRequest
             'tables.*.type' => ['required', 'string', 'in:dimension,sub-dimension,fact'],
             'tables.*.name' => ['required', 'string'],
             'tables.*.alias' => ['required', 'string'],
-            'tables.*.struct' => ['required', 'array', 'min:1'],
+            'tables.*.columns' => ['required', 'array', 'min:1'],
 
-            // cada campo da struct deve ser string
-            'tables.*.struct.*' => ['required', 'string'],
+            // cada campo da columns deve ser string
+            'tables.*.columns.*' => ['required', 'string'],
         ];
     }
 
@@ -38,7 +38,7 @@ class ConnectionRequest extends FormRequest
         return [
             'connection.host.required' => 'O host da conexão é obrigatório.',
             'tables.*.type.in' => 'O tipo da tabela deve ser dimension, sub-dimension ou fact.',
-            'tables.*.struct.*.string' => 'Cada campo da struct deve ser uma string válida.'
+            'tables.*.columns.*.string' => 'Cada campo da columns deve ser uma string válida.'
         ];
     }
 }

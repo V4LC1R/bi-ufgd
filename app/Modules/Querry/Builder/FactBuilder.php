@@ -6,30 +6,49 @@ use App\Modules\Querry\Http\DTOs\FactDTO;
 use App\Modules\Connection\Http\DTOs\TableDTO;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class FactBuilder
 {
-    protected Builder $query;
+    protected ?Builder $query = null;
 
     public function __construct(protected TableDTO $struct) {}
 
+    public function setQuery(Builder $query): self
+    {
+        $this->query = $query;
+        return $this;
+    }
+
+    public static function fill(TableDTO $struct,FactDTO $fact,Builder $query)
+    {
+        return (new self($struct))
+            ->setQuery($query)
+            ->build($fact);
+    }
+
     public function build(FactDTO $fact): Builder
     {
-        $this->query = DB::table($this->struct->name);
+        $this->query ??= DB::table($this->struct->name);
 
         $selects = [];
-
-        $filters = [];
 
         foreach ($fact->columns as $colName => $actions) {
             // SELECT
             foreach ($actions->aggregates as $agg) {
-                $select = $this->aggregationSelect($agg, $colName, $actions->as[$agg] ?? null);
+                $select = $this->aggregationSelect($agg, $colName, $actions->alias[$agg] ?? null);
                 if ($select) $selects[] = $select;
                 
-                $action = $actions->filter[$agg];
-                $this->aggregationFilter($action["op"],$action['value'],$agg,$colName);
-               
+                $filter = $actions->filter[$agg] ?? null;
+                if ($filter) {
+                    $this->aggregationFilter($filter['op'], $filter['value'], $agg, $colName);
+                }
+            }
+
+            foreach($actions->linear as $linear_op){
+                if (isset($actions->filter[$linear_op])) {
+                    $this->linearFilter($linear_op, $actions->filter[$linear_op], $colName);
+                }
             }
 
         }
@@ -47,38 +66,57 @@ class FactBuilder
 
     private function aggregationSelect(string $selected, string $col, ?string $alias = null)
     {
-        $aggregations = [
-            "avg"   => fn (string $col, string $alias) => DB::raw("AVG($col) $alias"),
-            "sum"   => fn (string $col, string $alias) => DB::raw("SUM($col) $alias"),
-            "count" => fn (string $col, string $alias) => DB::raw("COUNT($col) $alias"),
-            "min"   => fn (string $col, string $alias) => DB::raw("MIN($col) $alias"),
-            "max"   => fn (string $col, string $alias) => DB::raw("MAX($col) $alias"),
-        ];
+        // Lista branca de funções agregadoras permitidas
+        $allowed = ['avg', 'sum', 'count', 'min', 'max'];
+        $func = strtolower($selected);
 
-        if (!array_key_exists($selected, $aggregations)) {
-            return null;
-        }
+        if (!in_array($func, $allowed, true)) 
+            return null; // agregação não suportada
 
-        $aliasDefine = !!$alias ? "as {$alias}" : "";
-        return $aggregations[$selected]($col, $aliasDefine);
+        // Escapa nomes de coluna e alias de forma segura
+        $grammar = DB::getQueryGrammar();
+        $colSafe = $grammar->wrap($col);
+        $aliasSql = $alias ? ' as ' . $grammar->wrap($alias) : '';
+
+        // Monta a expressão final de forma segura
+        return DB::raw(strtoupper($func) . "($colSafe)$aliasSql");
     }
 
-    private function aggregationFilter(string $op, $value, string $agg, string $col)
+    private function aggregationFilter(string $op, mixed $value, string $agg, string $col): void
     {
-
-        $agg_querry = $this->aggregationSelect($agg,$col);
-
-        if ($op === ':range') {
-            $this->query->havingBetween($agg_querry, $value);
+        $aggExpr = $this->aggregationSelect($agg, $col);
+        if (!$aggExpr) {
             return;
         }
-        
-        $this->query->having($agg_querry, $op, $value);
 
+        if ($op === ':range') {
+            if (!is_array($value) || count($value) !== 2) return;
+                $this->query->havingBetween((string) $aggExpr, [$value[0], $value[1]]);
+            return;
+        }
+
+        $allowedOps = ['=', '!=', '>', '>=', '<', '<='];
+        if (!in_array($op, $allowedOps, true)) {
+            throw new InvalidArgumentException("Operator '{$op}' not allowed in aggregationFilter.");
+        }
+
+        $this->query->having($aggExpr, $op, $value);
     }
 
     private function linearFilter(string $op, $value, string $col)
     {
+        $dictionary = [
+            "gt"=>">",
+            "lt"=>"<",
+            "eq"=>"=",
+            "df"=>"!=",
+            "gt-eq"=>">=",
+            "ls-eq"=>"<=" 
+        ];
 
+        if(!array_key_exists($op,$dictionary))
+            return;
+
+        $this->query->where($col,$dictionary[$op],$value);
     }
 }
