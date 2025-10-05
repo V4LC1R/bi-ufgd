@@ -10,10 +10,10 @@ interface IStructTable
      */
     public function setConnectionName(string $connectionName): self;
     
-     /**
-     * Retorna lista de tabelas disponíveis no banco.
+    /**
+     * Retorna as tabelas e suas estruturas
      *
-     * @return array ['First', 'Main', ...]
+     * @return array<string,TableDTO>
      */
     public function getTables(): array;
 
@@ -29,7 +29,7 @@ interface IStructTable
      * @param string $table
      * @return array ['id_first' => 'fk:First.id']
      */
-    public function getRelations(string $table): array;
+    public function getRelations(): array;
 
     /**
      * @return array<string, array<string, TableDTO>>

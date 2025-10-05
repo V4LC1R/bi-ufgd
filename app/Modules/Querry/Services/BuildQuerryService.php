@@ -6,40 +6,52 @@ use App\Modules\Connection\Contracts\IStructTable;
 use App\Modules\Connection\Http\DTOs\TableDTO;
 use App\Modules\Querry\Builder\DimensionBuilder;
 use App\Modules\Querry\Builder\FactBuilder;
-use App\Modules\Querry\Http\DTOs\FactDTO;
+use App\Modules\Querry\Builder\SubDimensionBuilder;
 use App\Modules\Querry\Http\DTOs\DimensionDTO;
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
+use App\Modules\Querry\Traits\HasUsedDimensions;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
+
+use Illuminate\Support\Facades\Cache;
 
 class BuildQuerryService
 {
-    protected ?Builder $query = null;
 
+    use HasUsedDimensions;
     public function __construct(
-        protected IStructTable $struct_service
-    ) {}
+        protected IStructTable $struct_service,
+        protected BridgeJoinService $bridge
+    ) {
+    }
 
-    public function makeQuerry(PreSqlDTO $pre_sql, bool $dump = false): string
+    public function makeQuerry(PreSqlDTO $pre_sql, string $hash,bool $dump = false): array
     {
-        $this->struct_service->setConnectionName($pre_sql->connectionName);
+        $tables = $this->getEntities($pre_sql);
 
-        $tables = $this->struct_service->getStructConnection();
+        $this->bridge->resolve($pre_sql);
 
-        $fact_table = array_values($tables['fact'])[0];
+        $query = FactBuilder::fill( $tables['fact'] ,$pre_sql->fact);
+        DimensionBuilder::fill($tables['fact'],$pre_sql->dimensions, $query);
+        SubDimensionBuilder::fill($tables['dimensions'],$pre_sql->subDimensions, $query);
 
-        // fact (agregações e filtros)
-        FactBuilder::fill( $fact_table ,$pre_sql->fact,$this->query);
+        $cache = $this->cachingQuerry($hash,$query);
 
-        // dimensões
-        DimensionBuilder::fill($fact_table,$pre_sql->dimensions,$this->query);
-      
-        // sub-dimensões
+        return $dump ? $cache : ['message'=>'Querry was saved!'];
+    }
 
-        // gerar SQL
-        $sql = $this->query->toSql();
 
-        return $dump ? dd($sql) : $sql;
+    private function cachingQuerry(string $key,Builder $query)
+    {
+        $sql = $query->toSql();
+        $binds = $query->getBindings();
+
+        Cache::put("$key-sql",$sql);
+        Cache::put("$key-bindings",$binds);
+
+        return [
+            'sql'=>$sql,
+            'binds'=>$binds
+        ];
     }
 
 }

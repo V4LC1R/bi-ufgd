@@ -29,7 +29,7 @@ class PreSqlDTO
         // Mapeia sub-dimensões
         if (!empty($data['sub-dimension'])) {
             foreach ($data['sub-dimension'] as $subDim) {
-                $this->subDimensions[] = new DimensionDTO($subDim);
+                $this->subDimensions[] = new SubDimensionDTO($subDim);
             }
         }
         
@@ -44,7 +44,7 @@ class PreSqlDTO
         return [
             'connectionName' => $this->connectionName,
             'dimensions' => array_map(fn (DimensionDTO $d) => $d->toArray(), $this->dimensions),
-            'sub-dimension' => array_map(fn (DimensionDTO $sd) => $sd->toArray(), $this->subDimensions),
+            'sub-dimension' => array_map(fn (SubDimensionDTO $sd) => $sd->toArray(), $this->subDimensions),
             'fact' => $this->fact ? $this->fact->toArray() : [],
         ];
     }

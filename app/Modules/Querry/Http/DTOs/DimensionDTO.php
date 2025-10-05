@@ -17,6 +17,8 @@ class DimensionDTO
 
     public array $alias = [];
 
+    public ?string $table_alias =  null;
+
     public function __construct(array $data)
     {
         $this->table = $data['table'] ?? '';
@@ -24,15 +26,18 @@ class DimensionDTO
         $this->filter = $data['filter'] ?? [];
         $this->order = $data['order'] ?? [];
         $this->alias = $data['alias'] ?? [];
+        $this->table_alias = $data['tableAlias'] ?? null;
     }
 
     public function toArray(): array
     {
         return [
-            'table'   => $this->table,
-            'columns' => $this->columns,
-            'filter'  => $this->filter,
-            'order'   => $this->order,
+            'table'      => $this->table,
+            'columns'    => $this->columns,
+            'filter'     => $this->filter,
+            'order'      => $this->order,
+            'alias'      => $this->alias,
+            'tableAlias' => $this->table_alias
         ];
     }
 }

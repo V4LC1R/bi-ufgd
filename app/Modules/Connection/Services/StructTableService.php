@@ -61,7 +61,7 @@ class StructTableService implements IStructTable
     /**
      * Retorna as tabelas e suas estruturas
      *
-     * @return array ['First', 'Main', ...]
+     * @return array<string,TableDTO>
      */
     public function getTables(): array 
     {
@@ -103,18 +103,29 @@ class StructTableService implements IStructTable
      * @param string $table
      * @return array ['id_first' => 'fk:First.id']
      */
-     public function getRelations(string $table): array
+    public function getRelations(): array
     {
-        $columns = $this->getColumns($table);
+        $tables = $this->getTables();
         $relations = [];
+    
+        foreach ($tables as $table_name => $table) {
+            foreach ($table->columns as $col => $def) {
+                
+               // A definição é algo como: "number:fk:TabelaDestino.ColunaDestino"
+                // Vamos quebrar a string pelo caractere ':'
+                $parts = explode(':', $def);
 
-        foreach ($columns as $colName => $colStruct) {
-            if (isset($colStruct['fk']) && !empty($colStruct['fk'])) {
-                $relations[$colName] = $colStruct['fk'];
+                // A parte que nos interessa é a terceira (índice 2),
+                // que contém a relação. Fazemos uma verificação de segurança.
+                if (!isset($parts[1]) && $parts[1] !== 'fk' && !isset($parts[2]))
+                    continue;
+                
+                    
             }
         }
 
         return $relations;
     }
+    
 
 }

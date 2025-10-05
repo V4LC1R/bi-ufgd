@@ -8,7 +8,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
-class FactBuilder
+class FactBuilder extends BaseBuilder
 {
     protected ?Builder $query = null;
 
@@ -20,23 +20,36 @@ class FactBuilder
         return $this;
     }
 
-    public static function fill(TableDTO $struct,FactDTO $fact,Builder $query)
+    /**
+     * Summary of fill
+     * @param TableDTO $table
+     * @param FactDTO $fact
+     */
+    public static function fill(...$args): Builder
     {
-        return (new self($struct))
-            ->setQuery($query)
+        $table = $args[0];
+        $fact = $args[1];
+
+        return (new self($table))
+            ->setQuery(DB::table($table->name))
             ->build($fact);
     }
 
-    public function build(FactDTO $fact): Builder
+    /**
+     * Summary of build
+     * @param FactDTO $fact
+     * @return Builder|null
+     */
+    public function build(...$fact): Builder
     {
-        $this->query ??= DB::table($this->struct->name);
+       try {
 
         $selects = [];
 
-        foreach ($fact->columns as $colName => $actions) {
+        foreach ($fact[0]->columns as $colName => $actions) {
             // SELECT
             foreach ($actions->aggregates as $agg) {
-                $select = $this->aggregationSelect($agg, $colName, $actions->alias[$agg] ?? null);
+                $select = $this->aggregationSelect($agg, $colName,$actions->alias[$agg] ?? null);
                 if ($select) $selects[] = $select;
                 
                 $filter = $actions->filter[$agg] ?? null;
@@ -44,7 +57,7 @@ class FactBuilder
                     $this->aggregationFilter($filter['op'], $filter['value'], $agg, $colName);
                 }
             }
-
+            
             foreach($actions->linear as $linear_op){
                 if (isset($actions->filter[$linear_op])) {
                     $this->linearFilter($linear_op, $actions->filter[$linear_op], $colName);
@@ -54,14 +67,17 @@ class FactBuilder
         }
 
         if (!empty($selects)) {
-            $this->query->select($selects);
+            $this->query->addSelect($selects);
         }
 
-        if ($fact->limit > 0) {
-            $this->query->limit($fact->limit);
+        if ($fact[0]->limit > 0) {
+            $this->query->limit($fact[0]->limit);
         }
 
         return $this->query;
+       } catch (\Throwable $th) {
+        dd($th);
+       }
     }
 
     private function aggregationSelect(string $selected, string $col, ?string $alias = null)
@@ -76,22 +92,25 @@ class FactBuilder
         // Escapa nomes de coluna e alias de forma segura
         $grammar = DB::getQueryGrammar();
         $colSafe = $grammar->wrap($col);
+        $tableSafe = $grammar->wrapTable($this->struct->name);
         $aliasSql = $alias ? ' as ' . $grammar->wrap($alias) : '';
 
         // Monta a expressão final de forma segura
-        return DB::raw(strtoupper($func) . "($colSafe)$aliasSql");
+        return DB::raw(strtoupper($func) . "($tableSafe.$colSafe)$aliasSql");
     }
 
     private function aggregationFilter(string $op, mixed $value, string $agg, string $col): void
     {
-        $aggExpr = $this->aggregationSelect($agg, $col);
+        try {
+            $aggExpr = $this->aggregationSelect($agg, $col);
         if (!$aggExpr) {
             return;
         }
 
         if ($op === ':range') {
+        
             if (!is_array($value) || count($value) !== 2) return;
-                $this->query->havingBetween((string) $aggExpr, [$value[0], $value[1]]);
+                $this->query->havingBetween( $aggExpr, [$value[0], $value[1]]);
             return;
         }
 
@@ -101,6 +120,9 @@ class FactBuilder
         }
 
         $this->query->having($aggExpr, $op, $value);
+        } catch (\Throwable $th) {
+            dd($th);
+        }
     }
 
     private function linearFilter(string $op, $value, string $col)
@@ -116,7 +138,9 @@ class FactBuilder
 
         if(!array_key_exists($op,$dictionary))
             return;
-
+        
         $this->query->where($col,$dictionary[$op],$value);
     }
+
+    
 }

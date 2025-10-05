@@ -7,9 +7,13 @@ use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 use App\Modules\Querry\Jobs\ProcessQuerryBuilder;
 use App\Modules\Querry\Models\Querry;
 use App\Modules\Querry\Services\ValidatePreSqlService;
+use App\Modules\Querry\Traits\HasUsedDimensions;
+
 
 class QuerryService 
 {
+
+    use HasUsedDimensions;
 
     public function __construct(
         protected IStructTable $struct_service,
@@ -18,16 +22,18 @@ class QuerryService
 
     public function savePreSql(PreSqlDTO $pre_sql)
     {
-        $this->struct_service->setConnectionName($pre_sql->connectionName);
-
-        $roles = $this->struct_service->getStructConnection();
-
-        $this->validate_presql->compare($roles,$pre_sql);
+        
+        $this->validate_presql->compare($this->getEntities($pre_sql),$pre_sql);
 
         if(count($this->validate_presql->getErrors()) > 0)
             throw new \Exception(json_encode($this->validate_presql->getErrors()));
 
-        $query = Querry::create([
+        $this->dispatch($pre_sql);
+    }
+
+    private function dispatch(PreSqlDTO $pre_sql)
+    {
+         $query = Querry::create([
             'connection_id'=> $this->struct_service->getConnection()->id,
             'hash' => hash('sha256', json_encode($pre_sql->fact)),
             'type'=> QuerryType::JSON,
@@ -35,6 +41,5 @@ class QuerryService
         ]);
 
         ProcessQuerryBuilder::dispatch($query->id);
-
     }
 }

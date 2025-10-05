@@ -7,7 +7,7 @@ use App\Modules\Connection\Http\DTOs\TableDTO;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
-class DimensionBuilder
+class DimensionBuilder extends BaseBuilder
 {
     protected ?Builder $query = null;
     protected $stack_coluns = [];
@@ -31,30 +31,22 @@ class DimensionBuilder
      * @param array<string,DimensionDTO> $dimensions
      * @param Builder $query
      */
-    public static function fill(TableDTO $fact,array $dimensions,Builder $query)
+    public static function fill(...$args): Builder
     {
-        return (new self($fact))
-            ->setQuery($query)
-            ->build($dimensions);
+        return (new self($args[0]))
+            ->setQuery($args[2])
+            ->build($args[1]);
+
     }
 
-    /**
-     * Summary of build
-     * @param array<string,DimensionDTO> $dimensions
-     * @throws \Exception
-     * @return void
-     */
-    public function build(array $dimensions)
+    public function build(...$args): Builder
     {
-        if(!$this->query)
-            throw new \Exception("Querry acc not found!");
+       
 
         $cols = [];
         $grouping = [];
-
-        foreach ($dimensions as $table=> $dim) {
-            $aliases = $this->columnsWithAliases($table,$dim->columns,$dim->alias);
-
+        foreach ($args[0] as $dim) {
+            $aliases = $this->columnsWithAliases($dim->table,$dim->columns,$dim->alias);
             $cols = array_merge(
                 $cols,
                 $aliases['as']
@@ -66,67 +58,23 @@ class DimensionBuilder
             );
 
             //filter
-            $this->filter($table,$dim->filter);
-            $this->joinInFact($table);
+            $this->filter($dim->table,$dim->filter);
+            $this->joinInFact($dim->table);
         }
 
         $grouping = array_unique($grouping);
 
         if(!empty($grouping))
             $this->query->groupBy($grouping);
+
+        if (!empty($cols)) {
+            $this->query->addSelect($cols);
+        }
         
 
         return $this->query;
     }
-
-    private function columnsWithAliases(string $table,array $coluns, array $alias) :array
-    {
-        $as = [];
-        $to_grouping = [];
-        $grammar = DB::getQueryGrammar();
-        $table_wrap = $grammar->wrapTable($table);
-
-        foreach($coluns as $col){
-
-            $col_wrap = $table_wrap . '.' . $grammar->wrap($col);
-            
-            if(!array_key_exists($col, $alias)) {
-                $as[]= $col_wrap;
-                $to_grouping[]=$col_wrap;
-                continue;
-            }
-
-            $col_as_wrap = $grammar->wrap($alias[$col]);
-            $col_as = $col_wrap." as ".$col_as_wrap; 
-            $as[]= $col_as;
-            $to_grouping[] = $col_as_wrap;
-        }
-
-        return [
-            "as"=>$as,
-            "grouping"=>$to_grouping
-        ];
-    }
-
-    /**
-     * Summary of filter
-     * @param string $table
-     * @param array<string,array> $filters
-     * @return void
-     */
-    private function filter(string $table, array $filters)
-    {
-        $grammar = DB::getQueryGrammar();
-        $table_wrap = $grammar->wrapTable($table);
-
-        foreach ($filters as $col => $filter) {
-            $col_wrap = $table_wrap . '.' . $grammar->wrap($col);
-            $allowedOps = ['=', '!=', '>', '>=', '<', '<=', 'like'];
-            if(!in_array($filter['op'], $allowedOps, true)) continue;
-            $this->query->where($col_wrap,$filter['op'],$filter['value']);
-        }
-
-    }
+    
 
     private function joinInFact(string $dimension_table): void
     {
@@ -141,24 +89,26 @@ class DimensionBuilder
             $this->stack_coluns = $this->fact->columns;
         }
             
-        $grammar          = DB::getQueryGrammar();
-        $fact_table_wrap  = $grammar->wrapTable($fact_table);
-        $dim_table_wrap   = $grammar->wrapTable($dimension_table);
-
+         // Formato esperado: "type:fk:table.column"
+        $pattern = '/fk:' . preg_quote($dimension_table, '/') . '\.([a-zA-Z0-9_]+)/';
+        
         foreach ($this->stack_coluns as $col_name => $props) {
-            // Formato esperado: "type:fk:table.column"
-            if (!preg_match('/fk:' . preg_quote($dimension_table, '/') . '\.([a-zA-Z0-9_]+)/', $props, $matches)) {
-                continue;
+
+            // Testa se a coluna da fact referencia essa dimensão
+            $hasMatch = preg_match($pattern, $props, $matches);
+
+            if (! $hasMatch) {
+                continue; // não é FK para essa dimensão, passa pra próxima
             }
 
-            $dim_col_wrap  = $grammar->wrap($matches[1]);
-            $fact_col_wrap = $grammar->wrap($col_name);
-
+            // Captura a coluna da dimensão
+            $dimColumn = $matches[1];
+  
             $this->query->join(
                 $dimension_table,
-                "{$dim_table_wrap}.{$dim_col_wrap}",
+                "{$dimension_table}.{$dimColumn}",
                 '=',
-                "{$fact_table_wrap}.{$fact_col_wrap}"
+                "{$fact_table}.{$col_name}"
             );
 
             unset($this->stack_coluns[$col_name]);

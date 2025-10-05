@@ -18,7 +18,7 @@ class QuerryRequest extends FormRequest
 
             'fact' => ['required', 'array'],
             'fact.limit' => ['required', 'integer', 'min:0'],
-            'fact.columns' => ['required', 'array', 'size:1'],
+            'fact.columns' => ['required', 'array', 'min:1'],
 
             'fact.columns.*.aggregates' => ['sometimes', 'array'],
             'fact.columns.*.aggregates.*' => ['string'],
@@ -33,11 +33,12 @@ class QuerryRequest extends FormRequest
 
             'dimensions' => ['sometimes', 'array'],
             'dimensions.*.table' => ['required_with:dimensions', 'string'],
-            'dimensions.*.columns' => ['required_with:dimensions', 'array', 'min:1'],
+            'dimensions.*.columns' => ['sometimes', 'array'],
 
             'sub-dimension' => ['sometimes', 'array'],
             'sub-dimension.*.table' => ['required_with:sub-dimension', 'string'],
-            'sub-dimension.*.columns' => ['required_with:sub-dimension', 'array', 'min:1'],
+            'sub-dimension.*.columns' => ['sometimes', 'array', 'min:1'],
+            'sub-dimension.*.parent' => ['sometimes', 'string'],
         ];
     }
 
@@ -56,7 +57,7 @@ class QuerryRequest extends FormRequest
 
             'fact.columns.required' => 'O campo fact.columns é obrigatório.',
             'fact.columns.array' => 'O campo fact.columns deve ser um array.',
-            'fact.columns.size' => 'O campo fact.columns deve conter exatamente 1 item.',
+            'fact.columns.min' => 'O campo fact.columns deve conter no minimo 1 item.',
 
             'fact.columns.*.aggregates.array' => 'O campo agg deve ser um array.',
             'fact.columns.*.aggregates.*.string' => 'Cada item de agg deve ser uma string.',
@@ -82,6 +83,7 @@ class QuerryRequest extends FormRequest
             'sub-dimension.*.columns.required_with' => 'O campo columns é obrigatório em sub-dimension.',
             'sub-dimension.*.columns.array' => 'O campo columns em sub-dimension deve ser um array.',
             'sub-dimension.*.columns.min' => 'O campo columns em sub-dimension deve ter pelo menos 1 item.',
+            'sub-dimension.*.parent.string'=> 'O caminho pelo parent tem que ser string'
         ];
     }
 }

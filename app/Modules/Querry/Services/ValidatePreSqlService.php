@@ -5,6 +5,8 @@ use App\Modules\Connection\Http\DTOs\TableDTO;
 use App\Modules\Querry\Http\DTOs\DimensionDTO;
 use App\Modules\Querry\Http\DTOs\FactDTO;
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
+use App\Modules\Querry\Http\DTOs\SubDimensionDTO;
+use HasUsedDimensions;
 
 class ValidatePreSqlService
 {
@@ -22,13 +24,10 @@ class ValidatePreSqlService
     * @param PreSqlDTO $pre_sql
     */
     public function compare(array $roles,PreSqlDTO $pre_sql): ValidatePreSqlService
-    { 
-        $this->dimensions($roles['dimension'] ?? [],$pre_sql->dimensions);
-        
-        $this->dimensions($roles['sub-dimension'] ?? [],$pre_sql->subDimensions);
-
-        $this->fact(array_values($roles['fact'])[0] ?? [],$pre_sql->fact);
-        
+    {
+        $this->dimensions($roles['dimensions'] ?? [],$pre_sql->dimensions);
+        $this->subDimension($roles['sub-dimensions'] ?? [],$pre_sql->subDimensions);
+        $this->fact( $roles['fact'],$pre_sql->fact);
         return $this;
     }
 
@@ -50,6 +49,30 @@ class ValidatePreSqlService
         
             $this->validateTypeField($table,$pre_sql->filter);
    
+        }
+    }
+
+     /**
+     * @param array<string, TableDTO> $struct
+     * @param  array<SubDimensionDTO> $dimensions_pre_sql
+     * 
+    */
+    private function subDimension(array $struct, array $dimensions_pre_sql){
+        foreach ($dimensions_pre_sql as $pre_sql) {
+
+            if (!isset($struct[$pre_sql->table])) {
+                $this->errors["dimension-{$pre_sql->table}"][] = "Table '{$pre_sql->table}' not found in connection struct.";
+                continue;
+            }
+
+            $table = $struct[$pre_sql->table];
+        
+            $this->validateTypeField($table,$pre_sql->filter);
+
+            if($pre_sql->parent){
+                //continuar daqui com parent
+            }
+
         }
     }
 
@@ -110,7 +133,7 @@ class ValidatePreSqlService
         }
     }
 
-    protected function validateTypeField( TableDTO $table, array $filter): void
+    protected function validateTypeField(TableDTO $table, array $filter): void
     {
         foreach ($filter as $col => $condition) {
 
