@@ -67,7 +67,7 @@ class FactBuilder extends BaseBuilder
         }
 
         if (!empty($selects)) {
-            $this->query->addSelect($selects);
+            $this->query->select($selects);
         }
 
         if ($fact[0]->limit > 0) {
