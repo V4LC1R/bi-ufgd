@@ -35,7 +35,7 @@ class ProcessQuerryBuilder implements ShouldQueue
          
         $dto = new PreSqlDTO($pre_sql->struct);
 
-        $builder->makeQuerry($dto,$pre_sql->hash);
+        $builder->makeQuerry($dto,$pre_sql);
 
         \Log::info("Querry ID {$this->querry_id} processada com sucesso!");
     }

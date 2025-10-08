@@ -13,20 +13,21 @@ class QuerryController extends Controller
     public function __construct(
         protected QuerryService $service,
         protected BuildQuerryService $build
-    ){}
+    ) {
+    }
 
-        
-    public function store(QuerryRequest $request,)
+
+    public function store(QuerryRequest $request, )
     {
         try {
-            $dto  = new PreSqlDTO($request->all());
+            $dto = new PreSqlDTO($request->all());
             $this->service->savePreSql($dto);
-            return response()->json(["message"=>"Querry was saved, await your execution!"]);
+            return response()->json(["message" => "Querry was saved, await your execution!"]);
         } catch (\Throwable $th) {
             return response()->json([
-                "message"=>"Querry not was saved!",
-                "reason"=>$th->getMessage()
-            ],500);
+                "message" => "Querry not was saved!",
+                "reason" => $th->getMessage()
+            ], 500);
         }
     }
 
@@ -34,14 +35,14 @@ class QuerryController extends Controller
     {
         try {
             $pre_sql = Querry::find($id);
-            $dto  = new PreSqlDTO(json_decode($pre_sql->struct,true));
-            $this->build->makeQuerry($dto ,true);
-            return response()->json(["message"=>"Querry was saved, await your execution!"]);
+            $dto = new PreSqlDTO(json_decode($pre_sql->struct, true));
+            $this->build->makeQuerry($dto, $pre_sql->hash);
+            return response()->json(["message" => "Querry was saved, await your execution!"]);
         } catch (\Throwable $th) {
             return response()->json([
-                "message"=>"Querry not was saved!",
-                "reason"=>$th->getMessage()
-            ],500);
+                "message" => "Querry not was saved!",
+                "reason" => $th->getMessage()
+            ], 500);
         }
     }
 }

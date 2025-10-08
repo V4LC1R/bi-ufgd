@@ -12,7 +12,9 @@ class FactBuilder extends BaseBuilder
 {
     protected ?Builder $query = null;
 
-    public function __construct(protected TableDTO $struct) {}
+    public function __construct(protected TableDTO $struct)
+    {
+    }
 
     public function setQuery(Builder $query): self
     {
@@ -29,9 +31,10 @@ class FactBuilder extends BaseBuilder
     {
         $table = $args[0];
         $fact = $args[1];
+        $connectionName = $args[2];
 
         return (new self($table))
-            ->setQuery(DB::table($table->name))
+            ->setQuery(DB::connection($connectionName)->table($table->name))
             ->build($fact);
     }
 
@@ -42,42 +45,45 @@ class FactBuilder extends BaseBuilder
      */
     public function build(...$fact): Builder
     {
-       try {
+        try {
 
-        $selects = [];
+            $selects = [];
 
-        foreach ($fact[0]->columns as $colName => $actions) {
-            // SELECT
-            foreach ($actions->aggregates as $agg) {
-                $select = $this->aggregationSelect($agg, $colName,$actions->alias[$agg] ?? null);
-                if ($select) $selects[] = $select;
-                
-                $filter = $actions->filter[$agg] ?? null;
-                if ($filter) {
-                    $this->aggregationFilter($filter['op'], $filter['value'], $agg, $colName);
+
+
+            foreach ($fact[0]->columns as $colName => $actions) {
+
+                foreach ($actions->aggregates as $agg) {
+                    $select = $this->aggregationSelect($agg, $colName, $actions->alias[$agg] ?? null);
+                    if ($select)
+                        $selects[] = $select;
+
+                    $filter = $actions->filter[$agg] ?? null;
+                    if ($filter) {
+                        $this->aggregationFilter($filter['op'], $filter['value'], $agg, $colName);
+                    }
                 }
-            }
-            
-            foreach($actions->linear as $linear_op){
-                if (isset($actions->filter[$linear_op])) {
-                    $this->linearFilter($linear_op, $actions->filter[$linear_op], $colName);
+
+                foreach ($actions->linear as $linear_op) {
+                    if (isset($actions->filter[$linear_op])) {
+                        $this->linearFilter($linear_op, $actions->filter[$linear_op], $colName);
+                    }
                 }
+
             }
 
-        }
+            if (!empty($selects)) {
+                $this->query->select($selects);
+            }
 
-        if (!empty($selects)) {
-            $this->query->select($selects);
-        }
+            if ($fact[0]->limit > 0) {
+                $this->query->limit($fact[0]->limit);
+            }
 
-        if ($fact[0]->limit > 0) {
-            $this->query->limit($fact[0]->limit);
+            return $this->query;
+        } catch (\Throwable $th) {
+            dd($th);
         }
-
-        return $this->query;
-       } catch (\Throwable $th) {
-        dd($th);
-       }
     }
 
     private function aggregationSelect(string $selected, string $col, ?string $alias = null)
@@ -86,11 +92,12 @@ class FactBuilder extends BaseBuilder
         $allowed = ['avg', 'sum', 'count', 'min', 'max'];
         $func = strtolower($selected);
 
-        if (!in_array($func, $allowed, true)) 
+        if (!in_array($func, $allowed, true))
             return null; // agregação não suportada
 
         // Escapa nomes de coluna e alias de forma segura
-        $grammar = DB::getQueryGrammar();
+        $grammar = $this->query->getGrammar();
+        ;
         $colSafe = $grammar->wrap($col);
         $tableSafe = $grammar->wrapTable($this->struct->name);
         $aliasSql = $alias ? ' as ' . $grammar->wrap($alias) : '';
@@ -103,23 +110,24 @@ class FactBuilder extends BaseBuilder
     {
         try {
             $aggExpr = $this->aggregationSelect($agg, $col);
-        if (!$aggExpr) {
-            return;
-        }
+            if (!$aggExpr) {
+                return;
+            }
 
-        if ($op === ':range') {
-        
-            if (!is_array($value) || count($value) !== 2) return;
-                $this->query->havingBetween( $aggExpr, [$value[0], $value[1]]);
-            return;
-        }
+            if ($op === ':range') {
 
-        $allowedOps = ['=', '!=', '>', '>=', '<', '<='];
-        if (!in_array($op, $allowedOps, true)) {
-            throw new InvalidArgumentException("Operator '{$op}' not allowed in aggregationFilter.");
-        }
+                if (!is_array($value) || count($value) !== 2)
+                    return;
+                $this->query->havingBetween($aggExpr, [$value[0], $value[1]]);
+                return;
+            }
 
-        $this->query->having($aggExpr, $op, $value);
+            $allowedOps = ['=', '!=', '>', '>=', '<', '<='];
+            if (!in_array($op, $allowedOps, true)) {
+                throw new InvalidArgumentException("Operator '{$op}' not allowed in aggregationFilter.");
+            }
+
+            $this->query->having($aggExpr, $op, $value);
         } catch (\Throwable $th) {
             dd($th);
         }
@@ -128,19 +136,21 @@ class FactBuilder extends BaseBuilder
     private function linearFilter(string $op, $value, string $col)
     {
         $dictionary = [
-            "gt"=>">",
-            "lt"=>"<",
-            "eq"=>"=",
-            "df"=>"!=",
-            "gt-eq"=>">=",
-            "ls-eq"=>"<=" 
+            "gt" => ">",
+            "lt" => "<",
+            "eq" => "=",
+            "df" => "!=",
+            "gt-eq" => ">=",
+            "ls-eq" => "<="
         ];
 
-        if(!array_key_exists($op,$dictionary))
+        if (!array_key_exists($op, $dictionary))
             return;
-        
-        $this->query->where($col,$dictionary[$op],$value);
+
+        dd($col, $dictionary[$op], $value);
+
+        $this->query->where($col, $dictionary[$op], $value);
     }
 
-    
+
 }

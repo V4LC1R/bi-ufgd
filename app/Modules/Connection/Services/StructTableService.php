@@ -1,9 +1,11 @@
 <?
 namespace App\Modules\Connection\Services;
+use App\Modules\Connection\Builder\DinamicConnectionBuilder;
 use App\Modules\Connection\Contracts\IStructTable;
 use App\Modules\Connection\Http\DTOs\TableDTO;
 use App\Modules\Connection\Models\Connection;
 use App\Modules\Connection\Models\Tables;
+use Illuminate\Support\Facades\DB;
 
 class StructTableService implements IStructTable
 {
@@ -41,8 +43,7 @@ class StructTableService implements IStructTable
             return $this->connection;
 
         if(!$this->connection){
-            $this->connection = Connection::select(['id','type'])
-                ->where('name', $this->connectionName)
+            $this->connection = Connection::where('name', $this->connectionName)
                 ->first();
         }
         
@@ -127,5 +128,22 @@ class StructTableService implements IStructTable
         return $relations;
     }
     
+    public function swapToDataBase(): string
+    {
+        $conn_setting = $this->getConnection();
+        $connectionName = "dynamic_connection_{$conn_setting->id}";
 
+        // 1. DELEGA A CONSTRUÇÃO para o Builder!
+        $config = DinamicConnectionBuilder::fromModel($conn_setting);
+        
+        // 2. Injeta a configuração no sistema do Laravel.
+        config()->set("database.connections.{$connectionName}", $config);
+
+        // 3. Limpa a conexão antiga, se houver.
+        DB::purge($connectionName);
+
+        DB::connection($connectionName);
+
+        return $connectionName;
+    }
 }

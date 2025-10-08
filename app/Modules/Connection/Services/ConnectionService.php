@@ -1,11 +1,11 @@
 <?
 namespace App\Modules\Connection\Services;
 
+use App\Modules\Connection\Builder\DinamicConnectionBuilder;
 use App\Modules\Connection\Http\DTOs\ConnectionDTO;
 use App\Modules\Connection\Models\Connection;
 use App\Modules\Connection\Models\Tables;
 use Illuminate\Support\Facades\DB;
-use function Laravel\Prompts\table;
 
 class ConnectionService
 {
@@ -42,5 +42,10 @@ class ConnectionService
             DB::rollBack();
             throw new \Exception($th->getMessage());
         }
+    }
+
+    public function dynamicPool(Connection $conn_setting)
+    {
+        
     }
 }

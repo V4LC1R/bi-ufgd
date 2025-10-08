@@ -40,4 +40,5 @@ interface IStructTable
 
     public function getDriver():string;
 
+    public function swapToDataBase():string;
 }
