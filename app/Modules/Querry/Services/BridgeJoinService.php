@@ -2,7 +2,7 @@
 
 namespace App\Modules\Querry\Services;
 
-use App\Modules\Connection\Contracts\IStructTable;
+use App\Modules\Connection\Contracts\StructTable;
 use App\Modules\Connection\Http\DTOs\TableDTO;
 use App\Modules\Querry\Http\DTOs\DimensionDTO;
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
@@ -18,11 +18,12 @@ class BridgeJoinService
     private array $parentMap = [];
 
     /**
-     * O serviço precisa do IStructTable para conhecer o esquema completo do banco.
+     * O serviço precisa do StructTable para conhecer o esquema completo do banco.
      */
     public function __construct(
-        protected IStructTable $struct_service
-    ) {}
+        protected StructTable $struct_service
+    ) {
+    }
 
     /**
      * Analisa o PreSqlDTO e adiciona as dimensões-pai que faltam para garantir
@@ -48,14 +49,14 @@ class BridgeJoinService
         }
         // Passo 3: Inicia uma "fila de verificação" com todos os nós que o usuário pediu.
         // Vamos checar o pai de cada um deles.
-        $checkQueue = array_merge( $preSql->subDimensions);
+        $checkQueue = array_merge($preSql->subDimensions);
 
         // Passo 4: Navega para trás no grafo
         while (!empty($checkQueue)) {
             $currentNode = array_shift($checkQueue);
-           
+
             $parentName = $parentMap[$currentNode->table] ?? null;
-            
+
             // Se o nó atual não tem pai, ou se o pai já está presente, o caminho está completo.
             if (!$parentName || isset($presentDimensions[$parentName])) {
                 continue;
@@ -68,10 +69,10 @@ class BridgeJoinService
                 'alias' => [],
                 'filter' => []
             ]);
-           
+
             // Adiciona o DTO do pai à requisição principal
             $preSql->dimensions[] = $parentDto;
-          
+
             // Marca o pai como "presente" para não adicioná-lo de novo
             $presentDimensions[$parentName] = true;
             // Adiciona o pai na fila, para checarmos se ele tem um "avô"
@@ -80,7 +81,7 @@ class BridgeJoinService
         return $preSql;
     }
 
-     /**
+    /**
      * (Método auxiliar que já construímos antes)
      * Cria um mapa de referência de todas as relações FK [filho => pai].
      */

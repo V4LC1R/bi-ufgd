@@ -14,38 +14,26 @@ class ConnectionService
         try {
             DB::beginTransaction();
 
-                $connection = Connection::create([
-                    'name'=>$dto->name,
-                    'host'=>$dto->host,
-                    'user'=>$dto->user,
-                    'password'=>$dto->password,
-                    'database'=>$dto->database,
-                    'type'=>$dto->type,
-                ]);
+            $connection = Connection::create($dto->toArray());
 
-                $tables = [];
+            $tables = [];
 
-                foreach ($dto->tables as $table) {
-                    $tables[] = [
-                        'connection_id'=>$connection->id,
-                        'name'=>$table->name,
-                        'alias'=>$table->alias, 
-                        'columns'=>json_encode($table->columns),
-                        'type'=>$table->type
-                    ];
-                }
-                
-               Tables::insert($tables);
+            foreach ($dto->tables as $table) {
+                $tables[] = [
+                    'connection_id' => $connection->id,
+                    'name' => $table->name,
+                    'alias' => $table->alias,
+                    'columns' => json_encode($table->columns),
+                    'type' => $table->type
+                ];
+            }
+
+            Tables::insert($tables);
 
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
             throw new \Exception($th->getMessage());
         }
-    }
-
-    public function dynamicPool(Connection $conn_setting)
-    {
-        
     }
 }

@@ -29,18 +29,18 @@ class ProcessQuerryExecute implements ShouldQueue
     {
 
         try {
-            $conn =  Connection::findOrFail($this->connection_id);
+            $conn = Connection::findOrFail($this->connection_id);
 
             $query = Querry::findOrFail($this->query_id);
 
-            $executor->executeSqlCached($conn,$query->hash);
+            $executor->executeAndCache($conn, $query);
 
-        }catch(CacheQueryMissingError $e){
-        
-                
+        } catch (CacheQueryMissingError $e) {
 
-        }catch (\Throwable $th) {
-        
+
+
+        } catch (\Throwable $th) {
+
 
 
         }

@@ -1,16 +1,16 @@
 <?
 namespace App\Modules\Connection\Services;
 use App\Modules\Connection\Builder\DinamicConnectionBuilder;
-use App\Modules\Connection\Contracts\IStructTable;
+use App\Modules\Connection\Contracts\StructTable;
 use App\Modules\Connection\Http\DTOs\TableDTO;
 use App\Modules\Connection\Models\Connection;
 use App\Modules\Connection\Models\Tables;
 use Illuminate\Support\Facades\DB;
 
-class StructTableService implements IStructTable
+class StructTableService implements StructTable
 {
     protected ?string $connectionName = null;
-    
+
     /** @var TableDTO[] */
     protected array $tables = [];
     protected array $roles = [];
@@ -38,16 +38,16 @@ class StructTableService implements IStructTable
 
     public function getConnection()
     {
-        
-        if($this->connection)
+
+        if ($this->connection)
             return $this->connection;
 
-        if(!$this->connection){
+        if (!$this->connection) {
             $this->connection = Connection::where('name', $this->connectionName)
                 ->first();
         }
-        
-        if(!$this->connection)
+
+        if (!$this->connection)
             throw new \Exception("Connection not found!");
 
         return $this->connection;
@@ -64,17 +64,17 @@ class StructTableService implements IStructTable
      *
      * @return array<string,TableDTO>
      */
-    public function getTables(): array 
+    public function getTables(): array
     {
-        if(!$this->connectionName)
+        if (!$this->connectionName)
             throw new \Exception("Connection name not found!");
 
-        if(count($this->tables) > 0)
+        if (count($this->tables) > 0)
             return $this->tables;
 
         $this->getConnection();
 
-        $tables = Tables::select(['name', 'alias', 'columns','type'])
+        $tables = Tables::select(['name', 'alias', 'columns', 'type'])
             ->where('connection_id', $this->connection->id)
             ->get();
 
@@ -89,7 +89,7 @@ class StructTableService implements IStructTable
      * Summary of getStructConnection
      * @return array<string, array<string,TableDTO[]>> $roles
      */
-    public function getStructConnection():array
+    public function getStructConnection(): array
     {
         $this->roles = [];
         foreach ($this->getTables() as $table) {
@@ -108,11 +108,11 @@ class StructTableService implements IStructTable
     {
         $tables = $this->getTables();
         $relations = [];
-    
+
         foreach ($tables as $table_name => $table) {
             foreach ($table->columns as $col => $def) {
-                
-               // A definição é algo como: "number:fk:TabelaDestino.ColunaDestino"
+
+                // A definição é algo como: "number:fk:TabelaDestino.ColunaDestino"
                 // Vamos quebrar a string pelo caractere ':'
                 $parts = explode(':', $def);
 
@@ -120,30 +120,11 @@ class StructTableService implements IStructTable
                 // que contém a relação. Fazemos uma verificação de segurança.
                 if (!isset($parts[1]) && $parts[1] !== 'fk' && !isset($parts[2]))
                     continue;
-                
-                    
+
             }
         }
 
         return $relations;
     }
-    
-    public function swapToDataBase(): string
-    {
-        $conn_setting = $this->getConnection();
-        $connectionName = "dynamic_connection_{$conn_setting->id}";
 
-        // 1. DELEGA A CONSTRUÇÃO para o Builder!
-        $config = DinamicConnectionBuilder::fromModel($conn_setting);
-        
-        // 2. Injeta a configuração no sistema do Laravel.
-        config()->set("database.connections.{$connectionName}", $config);
-
-        // 3. Limpa a conexão antiga, se houver.
-        DB::purge($connectionName);
-
-        DB::connection($connectionName);
-
-        return $connectionName;
-    }
 }

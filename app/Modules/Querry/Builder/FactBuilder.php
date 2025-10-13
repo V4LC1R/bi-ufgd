@@ -2,8 +2,10 @@
 
 namespace App\Modules\Querry\Builder;
 
+
 use App\Modules\Querry\Http\DTOs\FactDTO;
 use App\Modules\Connection\Http\DTOs\TableDTO;
+use App\Modules\Query\Exceptions\BuildQueryError;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -82,7 +84,7 @@ class FactBuilder extends BaseBuilder
 
             return $this->query;
         } catch (\Throwable $th) {
-            dd($th);
+            throw BuildQueryError::logicalError('Erro ao Construir Query da Fato', [$fact[0]]);
         }
     }
 
@@ -129,7 +131,7 @@ class FactBuilder extends BaseBuilder
 
             $this->query->having($aggExpr, $op, $value);
         } catch (\Throwable $th) {
-            dd($th);
+            throw BuildQueryError::logicalError('Erro ao Construir Filtros de Agregadores', [$op, $value, $agg, $col]);
         }
     }
 
@@ -147,10 +149,7 @@ class FactBuilder extends BaseBuilder
         if (!array_key_exists($op, $dictionary))
             return;
 
-        dd($col, $dictionary[$op], $value);
-
         $this->query->where($col, $dictionary[$op], $value);
     }
-
 
 }

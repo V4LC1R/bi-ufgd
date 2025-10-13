@@ -35,8 +35,9 @@ class QuerryController extends Controller
     {
         try {
             $pre_sql = Querry::find($id);
-            $dto = new PreSqlDTO(json_decode($pre_sql->struct, true));
-            $this->build->makeQuerry($dto, $pre_sql->hash);
+
+            $this->build->makeQuerry($pre_sql, $pre_sql->hash);
+
             return response()->json(["message" => "Querry was saved, await your execution!"]);
         } catch (\Throwable $th) {
             return response()->json([

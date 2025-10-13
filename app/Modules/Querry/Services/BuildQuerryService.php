@@ -2,68 +2,68 @@
 
 namespace App\Modules\Querry\Services;
 
-use App\Modules\Connection\Contracts\IStructTable;
-use App\Modules\Connection\Services\ConnectionService;
+use App\Modules\Connection\Contracts\DynamicConnectionManager;
+use App\Modules\Connection\Contracts\StructTable;
 use App\Modules\Querry\Builder\DimensionBuilder;
 use App\Modules\Querry\Builder\FactBuilder;
 use App\Modules\Querry\Builder\SubDimensionBuilder;
+use App\Modules\Querry\Constants\QuerryStatusEnum;
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
+use App\Modules\Querry\Models\Querry;
 use App\Modules\Querry\Traits\HasUsedDimensions;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 
 class BuildQuerryService
 {
-
     use HasUsedDimensions;
     public function __construct(
-        protected IStructTable $struct_service,
-        protected BridgeJoinService $bridge
+        protected StructTable $struct_service,
+        protected BridgeJoinService $bridge,
+        protected DynamicConnectionManager $conn_manager
     ) {
     }
 
-    public function makeQuerry(PreSqlDTO $pre_sql, string $hash, bool $dump = false): array
+    public function makeQuerry(Querry $pre_querry, bool $dump = false): array
     {
         try {
-            $tables = $this->getEntities($pre_sql);
+            $dto = new PreSqlDTO(json_decode($pre_querry->struct, true));
 
-            $this->bridge->resolve($pre_sql);
+            $tables = $this->getEntities($dto);
+            $this->bridge->resolve($dto);
 
-            $conn = $this->struct_service->swapToDataBase();
+            $query = FactBuilder::fill($tables['fact'], $dto->fact, $this->getConnectionPool());
+            DimensionBuilder::fill($tables['fact'], $dto->dimensions, $query);
+            SubDimensionBuilder::fill($tables['dimensions'], $dto->subDimensions, $query);
 
-            $query = FactBuilder::fill($tables['fact'], $pre_sql->fact, $conn);
-            DimensionBuilder::fill($tables['fact'], $pre_sql->dimensions, $query);
-            SubDimensionBuilder::fill($tables['dimensions'], $pre_sql->subDimensions, $query);
+            $this->storeProcess($pre_querry, $query);
 
-            $cache = $this->cachingQuerry($hash, $query);
-
-            $response = [
-                'build' => true
-            ];
-
-            if ($dump)
-                $response = array_merge($response, $cache);
-
-            return $response;
+            return $pre_querry->toArray();
         } catch (\Throwable $th) {
             throw $th;
         }
     }
 
 
-    private function cachingQuerry(string $key, Builder $query)
+    private function storeProcess(Querry $pre_querry, Builder $query)
     {
         $sql = $query->toSql();
         $binds = $query->getBindings();
 
-        Cache::put("$key-sql", $sql);
-        Cache::put("$key-bindings", $binds);
+        $pre_querry->binds = json_encode($binds);
+        $pre_querry->literal_query = $sql;
+        $pre_querry->status = QuerryStatusEnum::SUCCESS;
+
+        $pre_querry->save();
 
         return [
             'sql' => $sql,
             'binds' => $binds
         ];
+    }
+
+    private function getConnectionPool()
+    {
+        return $this->conn_manager->setup($this->struct_service->getConnection());
     }
 
 }

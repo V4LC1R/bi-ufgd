@@ -6,7 +6,6 @@ use App\Modules\Querry\Http\DTOs\DimensionDTO;
 use App\Modules\Querry\Http\DTOs\FactDTO;
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 use App\Modules\Querry\Http\DTOs\SubDimensionDTO;
-use HasUsedDimensions;
 
 class ValidatePreSqlService
 {
@@ -20,14 +19,14 @@ class ValidatePreSqlService
     }
 
     /**
-    * @param array<string, array<string,TableDTO[]>> $roles
-    * @param PreSqlDTO $pre_sql
-    */
-    public function compare(array $roles,PreSqlDTO $pre_sql): ValidatePreSqlService
+     * @param array<string, array<string,TableDTO[]>> $roles
+     * @param PreSqlDTO $pre_sql
+     */
+    public function compare(array $roles, PreSqlDTO $pre_sql): ValidatePreSqlService
     {
-        $this->dimensions($roles['dimensions'] ?? [],$pre_sql->dimensions);
-        $this->subDimension($roles['sub-dimensions'] ?? [],$pre_sql->subDimensions);
-        $this->fact( $roles['fact'],$pre_sql->fact);
+        $this->dimensions($roles['dimensions'] ?? [], $pre_sql->dimensions);
+        $this->subDimension($roles['sub-dimensions'] ?? [], $pre_sql->subDimensions);
+        $this->fact($roles['fact'], $pre_sql->fact);
         return $this;
     }
 
@@ -35,8 +34,8 @@ class ValidatePreSqlService
      * @param array<string, TableDTO> $struct
      * @param  array<DimensionDTO> $dimensions_pre_sql
      * 
-    */
-    private function dimensions( array $struct, array $dimensions_pre_sql)
+     */
+    private function dimensions(array $struct, array $dimensions_pre_sql)
     {
         foreach ($dimensions_pre_sql as $pre_sql) {
 
@@ -46,18 +45,19 @@ class ValidatePreSqlService
             }
 
             $table = $struct[$pre_sql->table];
-        
-            $this->validateTypeField($table,$pre_sql->filter);
-   
+
+            $this->validateTypeField($table, $pre_sql->filter);
+
         }
     }
 
-     /**
+    /**
      * @param array<string, TableDTO> $struct
      * @param  array<SubDimensionDTO> $dimensions_pre_sql
      * 
-    */
-    private function subDimension(array $struct, array $dimensions_pre_sql){
+     */
+    private function subDimension(array $struct, array $dimensions_pre_sql)
+    {
         foreach ($dimensions_pre_sql as $pre_sql) {
 
             if (!isset($struct[$pre_sql->table])) {
@@ -66,10 +66,10 @@ class ValidatePreSqlService
             }
 
             $table = $struct[$pre_sql->table];
-        
-            $this->validateTypeField($table,$pre_sql->filter);
 
-            if($pre_sql->parent){
+            $this->validateTypeField($table, $pre_sql->filter);
+
+            if ($pre_sql->parent) {
                 //continuar daqui com parent
             }
 
@@ -77,17 +77,16 @@ class ValidatePreSqlService
     }
 
 
-    private function fact( TableDTO $struct, FactDTO $fact_pre_sql)
+    private function fact(TableDTO $struct, FactDTO $fact_pre_sql)
     {
         $cols_spect = array_keys($fact_pre_sql->columns);
 
-        if(!$fact_pre_sql->limit)
+        if (!$fact_pre_sql->limit)
             $this->errors["fact"]['table'][] = "Limit to Querry is not Found";
 
         foreach ($cols_spect as $col_spec) {
-            
-            if(!array_key_exists($col_spec,$struct->columns))
-            {
+
+            if (!array_key_exists($col_spec, $struct->columns)) {
                 $this->errors["fact"]['table'][] = "Column '{$col_spec}' not found in fact table.";
                 continue;
             }
@@ -98,9 +97,9 @@ class ValidatePreSqlService
                 $fact_cols_pre_sql->aggregates ?? [],
                 $fact_cols_pre_sql->linear ?? []
             );
-            
-            $this->validateColumnActions( $col,$actions,$col_spec);
-           ;
+
+            $this->validateColumnActions($col, $actions, $col_spec);
+            ;
         }
     }
 
@@ -110,12 +109,12 @@ class ValidatePreSqlService
         $col_type = $parts[0];
 
         $type_ops = [
-            'number' => ['sum','avg','min','max','gt','lt','gt-eq','lt-eq','eq','count',':range',':list','df'],
-            'string' => ['eq','count','df'],
-            'date'   => ['eq','count',':range',':list'],
-            'datetime' => ['eq','count',':range',':list'],
-            'time' =>  ['eq','count',':range',':list'],
-            'bool' => ['eq','df',':list']
+            'number' => ['sum', 'avg', 'min', 'max', 'gt', 'lt', 'gt-eq', 'lt-eq', 'eq', 'count', ':range', ':list', 'df'],
+            'string' => ['eq', 'count', 'df'],
+            'date' => ['eq', 'count', ':range', ':list'],
+            'datetime' => ['eq', 'count', ':range', ':list'],
+            'time' => ['eq', 'count', ':range', ':list'],
+            'bool' => ['eq', 'df', ':list']
         ];
 
         if (!isset($type_ops[$col_type])) {
@@ -128,8 +127,8 @@ class ValidatePreSqlService
         foreach ($actions as $act) {
             if (!in_array($act, $type_ops_for_col)) {
                 $this->errors['fact']['column'][$col_name][] = "Action '{$act}' cannot be applied to column '{$col_name}' of type '{$col_type}'.";
-            } 
-            
+            }
+
         }
     }
 
@@ -137,8 +136,7 @@ class ValidatePreSqlService
     {
         foreach ($filter as $col => $condition) {
 
-            if(!array_key_exists($col,$table->columns))
-            {
+            if (!array_key_exists($col, $table->columns)) {
                 $this->errors['dimensions']['table'][$table->name][] = "Column '{$col}' not found in table in {$table->name} table.";
                 continue;
             }
@@ -155,14 +153,14 @@ class ValidatePreSqlService
 
     private function checkType(string $expected, mixed $value): bool
     {
-        return match($expected) {
-            'number'   => is_numeric($value),
-            'string'   => is_string($value),
+        return match ($expected) {
+            'number' => is_numeric($value),
+            'string' => is_string($value),
             'date' => strtotime($value) !== false,
             'datetime' => strtotime($value) !== false,
-            'time'     => preg_match('/^\d{2}:\d{2}(:\d{2})?$/', (string)$value),
-            'bool'     => is_bool($value) || $value === 0 || $value === 1,
-            default    => false // nada passa
+            'time' => preg_match('/^\d{2}:\d{2}(:\d{2})?$/', (string) $value),
+            'bool' => is_bool($value) || $value === 0 || $value === 1,
+            default => false // nada passa
         };
     }
 

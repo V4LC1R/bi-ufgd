@@ -36,4 +36,16 @@ class ConnectionDTO
             $this->tables[] = new TableDTO($table);
         }
     }
+
+    public function toArray()
+    {
+        return [
+            'name' => $this->name,
+            'host' => $this->host,
+            'user' => $this->user,
+            'password' => $this->password,
+            'database' => $this->database,
+            'type' => $this->type,
+        ];
+    }
 }

@@ -1,9 +1,12 @@
 <?php
 namespace App\Modules\Connection\Services;
 
-use App\Modules\Connection\Contracts\IStructTable;
+use App\Modules\Connection\Contracts\DynamicConnectionManager;
+use App\Modules\Connection\Contracts\StructTable;
 use App\Modules\Connection\Errors\CacheQueryMissingError;
+use App\Modules\Connection\Errors\QueryExecutionException;
 use App\Modules\Connection\Models\Connection;
+use App\Modules\Querry\Models\Querry;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -12,32 +15,39 @@ class ExecuteSqlService
 
     public function __construct(
         protected ConnectionService $connection_service,
-        protected IStructTable $struct
-    ){}
-    public function executeAndCache(Connection $conn, $hash,$dump=false)
+        protected StructTable $struct,
+        protected DynamicConnectionManager $conn_manager
+    ) {
+    }
+    public function executeAndCache(Connection $conn, Querry $query, $dump = false)
     {
         try {
-           
-            $sql_data = $this->getFromCache($hash);
 
-            if(!$sql_data['bind'] || !isset($sql_data['bind'])){
-              throw new CacheQueryMissingError("Querry cache don't find!");
+            if (!$query->literal_query) {
+                throw new CacheQueryMissingError("Querry cache don't find!");
             }
-            
-            $conn_name =  $this->struct
-                ->setConnectionName($conn->name)
-                ->swapToDataBase();
 
-            $result = DB::connection($conn_name)->select($sql_data['sql'],$sql_data['bind']);
+            if (empty($query->literal_query)) {
+                throw new QueryExecutionException("O SQL para a Query ID {$query->id} não foi gerado ou não foi encontrado.");
+            }
 
-            $cacheKey = "query_result_{$hash}";
+            $result = DB::connection($this->conn_manager->setup($conn))
+                ->select($query->literal_query, $query->binds ?? []);
+
+            $cacheKey = "query_result_{$query->hash}";
             Cache::put($cacheKey, $result, now()->addHours(24));
 
-            if($dump)
+            if ($dump)
                 return $result;
 
         } catch (\Throwable $th) {
-            dd($th);
+
+            if ($th instanceof QueryExecutionException) {
+                throw $th;
+            }
+
+            // Se for um erro do DB (PDOException), o "embrulhamos" com o nosso
+            throw QueryExecutionException::genericFailure($query, $th);
         }
     }
 
@@ -45,8 +55,8 @@ class ExecuteSqlService
     private function getFromCache(string $hash)
     {
         return [
-            'sql' =>Cache::get("$hash-sql"),
-            'bind' =>  Cache::get("$hash-bindings")
+            'sql' => Cache::get("$hash-sql"),
+            'bind' => Cache::get("$hash-bindings")
         ];
     }
 }

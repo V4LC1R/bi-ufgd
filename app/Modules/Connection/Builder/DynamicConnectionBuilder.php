@@ -4,7 +4,7 @@ namespace App\Modules\Connection\Builder;
 
 use App\Modules\Connection\Models\Connection;
 
-class DinamicConnectionBuilder
+class DynamicConnectionBuilder
 {
     private array $config = [];
 

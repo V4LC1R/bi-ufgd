@@ -2,14 +2,14 @@
 namespace App\Modules\Connection\Contracts;
 
 use App\Modules\Connection\Http\DTOs\TableDTO;
-interface IStructTable
+interface StructTable
 {
     /**
      * Seleciona a conexão pelo nome cadastrado
      * Ex: "graduacao", "financeiro"
      */
     public function setConnectionName(string $connectionName): self;
-    
+
     /**
      * Retorna as tabelas e suas estruturas
      *
@@ -38,7 +38,5 @@ interface IStructTable
 
     public function getConnection();
 
-    public function getDriver():string;
-
-    public function swapToDataBase():string;
+    public function getDriver(): string;
 }
