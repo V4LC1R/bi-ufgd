@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class ExecuteSqlService
 {
-
     public function __construct(
         protected ConnectionService $connection_service,
         protected StructTable $struct,
@@ -32,7 +31,7 @@ class ExecuteSqlService
             }
 
             $result = DB::connection($this->conn_manager->setup($conn))
-                ->select($query->literal_query, $query->binds ?? []);
+                ->select($query->literal_query, json_decode($query->binds) ?? []);
 
             $cacheKey = "query_result_{$query->hash}";
             Cache::put($cacheKey, $result, now()->addHours(24));
@@ -49,14 +48,5 @@ class ExecuteSqlService
             // Se for um erro do DB (PDOException), o "embrulhamos" com o nosso
             throw QueryExecutionException::genericFailure($query, $th);
         }
-    }
-
-
-    private function getFromCache(string $hash)
-    {
-        return [
-            'sql' => Cache::get("$hash-sql"),
-            'bind' => Cache::get("$hash-bindings")
-        ];
     }
 }

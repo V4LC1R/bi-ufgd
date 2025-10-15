@@ -18,30 +18,29 @@ class ProcessQuerryExecute implements ShouldQueue
 
 
     public function __construct(
-        protected string $query_id,
-        protected int $connection_id
+        protected string $query_id
     ) {
         // Define a fila diretamente no trait
-        $this->onQueue('simple_querry_exec');
+        $this->onQueue('exec');
     }
 
     public function handle(ExecuteSqlService $executor)
     {
 
         try {
-            $conn = Connection::findOrFail($this->connection_id);
-
             $query = Querry::findOrFail($this->query_id);
+
+            $conn = Connection::findOrFail($query->connection_id);
 
             $executor->executeAndCache($conn, $query);
 
         } catch (CacheQueryMissingError $e) {
-
+            throw $e;
 
 
         } catch (\Throwable $th) {
 
-
+            throw $th;
 
         }
     }

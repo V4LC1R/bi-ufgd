@@ -31,14 +31,28 @@ class QuerryController extends Controller
         }
     }
 
+    public function edit(QuerryRequest $request, )
+    {
+        try {
+            $dto = new PreSqlDTO($request->all());
+            $this->service->savePreSql($dto);
+            return response()->json(["message" => "Querry was saved, await your execution!"]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "message" => "Querry not was saved!",
+                "reason" => $th->getMessage()
+            ], 500);
+        }
+    }
+
     public function teste($id)
     {
         try {
             $pre_sql = Querry::find($id);
 
-            $this->build->makeQuerry($pre_sql, $pre_sql->hash);
+            $this->build->makeQuerry($pre_sql, false);
 
-            return response()->json(["message" => "Querry was saved, await your execution!"]);
+            return response()->json(["message" => "Querry is ok, await your execution!"]);
         } catch (\Throwable $th) {
             return response()->json([
                 "message" => "Querry not was saved!",

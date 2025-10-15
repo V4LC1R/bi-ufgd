@@ -22,7 +22,7 @@ class QuerryService
     ) {
     }
 
-    public function savePreSql(PreSqlDTO $pre_sql)
+    public function savePreSql(PreSqlDTO $pre_sql, $id = null)
     {
         $this->validate_presql->compare($this->getEntities($pre_sql), $pre_sql);
 
@@ -32,11 +32,11 @@ class QuerryService
         $this->dispatch($pre_sql);
     }
 
-    private function dispatch(PreSqlDTO $pre_sql)
+    private function dispatch(PreSqlDTO $pre_sql, $id = null)
     {
         $query = Querry::create([
             'connection_id' => $this->struct_service->getConnection()->id,
-            'hash' => hash('sha256', json_encode($pre_sql->fact)),
+            'hash' => $this->generateStableHash($pre_sql),
             'type' => QuerryType::JSON,
             'struct' => json_encode($pre_sql->toArray()),
             'status' => QuerryStatusEnum::PENDING,
@@ -45,5 +45,23 @@ class QuerryService
         ]);
 
         ProcessQuerryBuilder::dispatch($query->id);
+    }
+
+    private function generateStableHash(PreSqlDTO $dto): string
+    {
+        // Converte o DTO para um array
+        $data = $dto->toArray();
+
+        // Ordena o array recursivamente pelas chaves para garantir consistência
+        // "ksort" ordena pelas chaves (keys)
+        array_walk_recursive($data, function (&$value, $key) use (&$data) {
+            if (is_array($value)) {
+                ksort($value);
+            }
+        });
+        ksort($data);
+
+        // Codifica o array ordenado para JSON e gera o hash
+        return hash('sha256', json_encode($data));
     }
 }

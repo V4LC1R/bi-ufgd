@@ -6,6 +6,10 @@ services:
       context: ./.docker/php8
     container_name: bi-ufgd-app
     restart: unless-stopped
+    # A MÁGICA ESTÁ AQUI 👇
+    # Isso faz o contêiner rodar com o mesmo ID de usuário e grupo que você.
+    # As variáveis UID e GID virão de um arquivo .env que vamos criar.
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./:/var/www/html
       - ./.docker/php8/local.ini:/usr/local/etc/php/local.ini
@@ -19,6 +23,7 @@ services:
       - 'host.docker.internal:host-gateway'
 
   postgres:
+    # ... (sem mudanças)
     image: postgres
     container_name: bi-ufgd-postgres
     restart: unless-stopped
@@ -34,6 +39,7 @@ services:
       - bi-ufgd-network
 
   mysql:
+    # ... (sem mudanças)
     container_name: datawarehouse-mysql
     image: 'mysql/mysql-server:8.0'
     ports:
@@ -59,6 +65,7 @@ services:
         timeout: 5s
 
   redis:
+    # ... (sem mudanças)
     image: redis:alpine
     platform: linux/arm64
     container_name: bi-ufgd-redis
