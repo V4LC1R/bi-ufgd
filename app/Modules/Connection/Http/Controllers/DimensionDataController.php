@@ -16,10 +16,14 @@ class DimensionDataController extends Controller
     ) {
     }
 
-    public function search(Tables $table, DimensionFilterRequest $request): JsonResponse
+    public function search(int $conn_id, DimensionFilterRequest $request): JsonResponse
     {
         // O Spatie já validou e criou o DTO. Pegamos ele com o método dto().
-        $filterDto = $request->dto();
+        $filterDto = $request->toDTO();
+
+        $table = Tables::where('name', $filterDto->table)
+            ->where('connection_id', $conn_id)
+            ->first();
 
         $paginatedData = $this->dimensionDataService->getFilteredPaginatedData($table, $filterDto);
 

@@ -32,9 +32,6 @@ class DimensionDataService
      */
     public function getFilteredPaginatedData(Tables $table, DimensionFilterDTO $dto): LengthAwarePaginator
     {
-
-        dd('oci');
-
         // 1. Prepara o ambiente: ativa a conexão com o Data Warehouse correto.
         $connectionName = $this->connectionManager->setup($table->connection);
 
@@ -44,8 +41,10 @@ class DimensionDataService
         // 3. Delega a aplicação dos filtros para um método auxiliar.
         $this->applyFilters($query, $dto->filters);
 
-        // 4. Aplica a ordenação usando os dados do DTO.
-        $query->orderBy($dto->sortBy, $dto->sortDirection);
+        $columns = array_keys(json_decode($table->columns, true));
+
+        if (in_array($dto->sortBy, $columns))
+            $query->orderBy($dto->sortBy, $dto->sortDirection);
 
         // 5. Executa a query com paginação e retorna o resultado.
         return $query->paginate(

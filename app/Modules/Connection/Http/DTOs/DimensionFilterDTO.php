@@ -7,6 +7,7 @@ use Spatie\LaravelData\Attributes\Validation\In;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Sometimes;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Optional;
 
 
 
@@ -33,7 +34,7 @@ class DimensionFilterDTO extends Data
         public readonly string $table,
 
         // A propriedade $filters é declarada acima com seus atributos
-        array $filters = [],
+        Optional|array $filters = [],
     ) {
         $this->filters = $filters;
     }
