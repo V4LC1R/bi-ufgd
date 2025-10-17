@@ -34,7 +34,13 @@ class ExecuteSqlService
                 ->select($query->literal_query, json_decode($query->binds) ?? []);
 
             $cacheKey = "query_result_{$query->hash}";
-            Cache::put($cacheKey, $result, now()->addHours(24));
+            $connectionTag = "connection_{$query->connection_id}";
+            Cache::tags([$connectionTag])
+                ->put(
+                    $cacheKey,
+                    $result,
+                    now()->addHours(24)
+                );
 
             if ($dump)
                 return $result;

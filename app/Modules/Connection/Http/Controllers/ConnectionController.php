@@ -26,6 +26,23 @@ class ConnectionController extends Controller
 
             $this->service->create($dto);
 
+            return response()->json(["message" => "Connection Saved!"], 201);
+        } catch (\Exception $th) {
+            return response()
+                ->json([
+                    "message" => "Err to save connection!",
+                    "reason" => $th->getMessage()
+                ], 500);
+        }
+    }
+
+    public function edit(ConnectionRequest $request, $conn_id)
+    {
+        try {
+            $dto = new ConnectionDTO($request->all());
+
+            $this->service->edit($dto, $conn_id);
+
             return response()->json(["message" => "Connection Saved!"]);
         } catch (\Exception $th) {
             return response()
@@ -43,9 +60,9 @@ class ConnectionController extends Controller
 
             $conn = Connection::findOrFail($query->connection_id);
 
-            $result = $this->excutor->executeAndCache($conn, $query, true);
+            $this->excutor->executeAndCache($conn, $query, true);
 
-            return response()->json($result);
+            return response()->json();
         } catch (\Exception $th) {
             return response()
                 ->json([

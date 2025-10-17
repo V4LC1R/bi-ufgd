@@ -7,4 +7,5 @@ enum QuerryStatusEnum: string
     case SUCCESS = 'success';
     case RETRY = 'retry';
     case FAIL = 'fail';
+    case INVALID = 'invalid';
 }

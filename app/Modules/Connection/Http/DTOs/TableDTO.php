@@ -17,4 +17,14 @@ class TableDTO
         $this->columns = $data['columns'] ?? [];
         $this->type = $data['type'];
     }
+
+    public function toArray()
+    {
+        return [
+            'name' => $this->name,
+            'alias' => $this->alias,
+            'columns' => json_encode($this->columns),
+            'type' => $this->type,
+        ];
+    }
 }

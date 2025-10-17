@@ -26,7 +26,7 @@ class BuildQuerryService
     public function makeQuerry(Querry $pre_querry, bool $dump = false): array
     {
         try {
-            $dto = new PreSqlDTO(json_decode($pre_querry->struct, true));
+            $dto = new PreSqlDTO($pre_querry->struct);
 
             $tables = $this->getEntities($dto);
             $this->bridge->resolve($dto);

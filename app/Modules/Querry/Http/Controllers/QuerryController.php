@@ -16,7 +16,6 @@ class QuerryController extends Controller
     ) {
     }
 
-
     public function store(QuerryRequest $request, )
     {
         try {
@@ -31,11 +30,11 @@ class QuerryController extends Controller
         }
     }
 
-    public function edit(QuerryRequest $request, )
+    public function edit(QuerryRequest $request, $query_id)
     {
         try {
             $dto = new PreSqlDTO($request->all());
-            $this->service->savePreSql($dto);
+            $this->service->savePreSql($dto, $query_id);
             return response()->json(["message" => "Querry was saved, await your execution!"]);
         } catch (\Throwable $th) {
             return response()->json([
