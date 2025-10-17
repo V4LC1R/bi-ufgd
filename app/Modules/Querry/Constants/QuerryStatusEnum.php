@@ -3,9 +3,11 @@ namespace App\Modules\Querry\Constants;
 
 enum QuerryStatusEnum: string
 {
-    case PENDING = 'pending';
-    case SUCCESS = 'success';
-    case RETRY = 'retry';
-    case FAIL = 'fail';
-    case INVALID = 'invalid';
+    case PENDING = 'pending'; //esperando o building
+
+    case BUILD = 'build'; // esperando a execucao
+
+    case SUCCESS = 'success'; // Executado
+    case FAIL = 'fail'; // falha
+    case INVALID = 'invalid'; // invalido por edicao
 }

@@ -32,10 +32,10 @@ class QueryExecutionException extends RuntimeException
     /**
      * Método de fábrica para quando o pré-requisito da execução (o SQL gerado) não é encontrado.
      *
-     * @param Query $query O modelo da query que falhou.
+     * @param Querry $query O modelo da query que falhou.
      * @return self
      */
-    public static function missingSql(Query $query): self
+    public static function missingSql(Querry $query): self
     {
         $message = "O SQL para a Query ID {$query->id} não foi gerado ou não foi encontrado no banco de dados.";
 

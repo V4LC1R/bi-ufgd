@@ -2,6 +2,7 @@
 
 namespace App\Modules\Connection\Http\Controllers;
 
+use App\Modules\Connection\Contracts\QueryExecutor;
 use App\Modules\Connection\Http\DTOs\ConnectionDTO;
 use App\Modules\Connection\Http\Requests\ConnectionRequest;
 use App\Modules\Connection\Models\Connection;
@@ -15,7 +16,7 @@ class ConnectionController extends Controller
 {
     public function __construct(
         protected ConnectionService $service,
-        protected ExecuteSqlService $excutor,
+        protected QueryExecutor $excutor,
         protected DimensionDataService $dim
     ) {
     }
@@ -58,9 +59,7 @@ class ConnectionController extends Controller
         try {
             $query = Querry::findOrFail($query_id);
 
-            $conn = Connection::findOrFail($query->connection_id);
-
-            $this->excutor->executeAndCache($conn, $query, true);
+            $this->excutor->executeAndCache($query);
 
             return response()->json();
         } catch (\Exception $th) {

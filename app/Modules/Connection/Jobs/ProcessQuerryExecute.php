@@ -2,6 +2,7 @@
 
 namespace App\Modules\Connection\Jobs;
 
+use App\Modules\Connection\Contracts\QueryExecutor;
 use App\Modules\Connection\Errors\CacheQueryMissingError;
 use App\Modules\Connection\Models\Connection;
 use App\Modules\Connection\Services\ExecuteSqlService;
@@ -24,24 +25,18 @@ class ProcessQuerryExecute implements ShouldQueue
         $this->onQueue('exec');
     }
 
-    public function handle(ExecuteSqlService $executor)
+    public function handle(QueryExecutor $executor)
     {
 
         try {
             $query = Querry::findOrFail($this->query_id);
 
-            $conn = Connection::findOrFail($query->connection_id);
-
-            $executor->executeAndCache($conn, $query);
+            $executor->executeAndCache($query);
 
         } catch (CacheQueryMissingError $e) {
             throw $e;
-
-
         } catch (\Throwable $th) {
-
             throw $th;
-
         }
     }
 }

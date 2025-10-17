@@ -51,7 +51,7 @@ class BuildQuerryService
 
         $pre_querry->binds = json_encode($binds);
         $pre_querry->literal_query = $sql;
-        $pre_querry->status = QuerryStatusEnum::SUCCESS;
+        $pre_querry->status = QuerryStatusEnum::BUILD;
 
         $pre_querry->save();
 

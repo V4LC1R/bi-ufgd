@@ -10,7 +10,7 @@ use App\Modules\Querry\Jobs\ProcessQuerryBuilder;
 use App\Modules\Querry\Models\Querry;
 use App\Modules\Querry\Services\ValidatePreSqlService;
 use App\Modules\Querry\Traits\HasUsedDimensions;
-
+use Illuminate\Support\Facades\Cache;
 class QuerryService
 {
     use HasUsedDimensions;
@@ -21,25 +21,25 @@ class QuerryService
     ) {
     }
 
-    /**
-     * Ponto de entrada principal. Orquestra a validação e o dispatch.
-     * A ASSINATURA DESTE MÉTODO NÃO FOI ALTERADA, como você pediu.
-     */
+    public function getData(string $hash)
+    {
+        $cacheKey = "query_result_{$hash}";
+
+        if (!Cache::has($cacheKey)) {
+            return null; // Cache "miss"
+        }
+
+        // Se existe, pega o valor e retorna.
+        return Cache::get($cacheKey); // Cache "hit"
+    }
+
     public function savePreSql(PreSqlDTO $pre_sql, $id = null): Querry
     {
-        // 1. Chama o método de validação reutilizável.
-        // Se a validação falhar, ele lança uma exceção e para aqui.
         $this->validate($pre_sql);
 
         return $this->dispatch($pre_sql, $id);
     }
 
-    /**
-     * MÉTODO REUTILIZÁVEL: Valida a estrutura da PreSqlDTO.
-     * Pode ser chamado de qualquer lugar para apenas validar uma query.
-     *
-     * @throws \Exception
-     */
     public function validate(PreSqlDTO $pre_sql): void
     {
         $this->validate_presql->compare($this->getEntities($pre_sql), $pre_sql);
@@ -51,10 +51,6 @@ class QuerryService
         }
     }
 
-    /**
-     * Lógica de persistência e disparo do job, agora separada.
-     * Este método lida com a criação (se id=null) ou atualização de uma query.
-     */
     private function dispatch(PreSqlDTO $pre_sql, ?int $id = null): Querry
     {
 
@@ -74,9 +70,6 @@ class QuerryService
         return $query;
     }
 
-    /**
-     * Helper para gerar o hash. Permanece o mesmo.
-     */
     private function generateStableHash(PreSqlDTO $dto): string
     {
         $data = $dto->toArray();

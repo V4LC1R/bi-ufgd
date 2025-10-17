@@ -44,6 +44,20 @@ class QuerryController extends Controller
         }
     }
 
+    public function result(QuerryRequest $request, $query_id)
+    {
+        try {
+            $dto = new PreSqlDTO($request->all());
+            $this->service->savePreSql($dto, $query_id);
+            return response()->json(["message" => "Querry was saved, await your execution!"]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "message" => "Querry not was saved!",
+                "reason" => $th->getMessage()
+            ], 500);
+        }
+    }
+
     public function teste($id)
     {
         try {

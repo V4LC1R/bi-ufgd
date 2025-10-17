@@ -1,6 +1,7 @@
 <?php
 namespace App\Modules\Querry\Models;
 
+use App\Modules\Connection\Models\Connection;
 use App\Modules\Querry\Constants\QuerryStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,7 +20,8 @@ class Querry extends Model
         'struct',
         'status',
         'binds',
-        'literal_query'
+        'literal_query',
+        'error_message'
     ];
 
     protected $casts = [
@@ -35,5 +37,10 @@ class Querry extends Model
     {
         $this->status = $status;
         $this->save();
+    }
+
+    public function connection()
+    {
+        return $this->belongsTo(Connection::class);
     }
 }
