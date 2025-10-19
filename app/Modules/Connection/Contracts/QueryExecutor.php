@@ -7,7 +7,5 @@ use App\Modules\Querry\Models\Querry;
 
 interface QueryExecutor
 {
-
     public function executeAndCache(Querry $query);
-
 }

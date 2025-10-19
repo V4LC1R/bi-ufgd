@@ -10,7 +10,7 @@ use App\Modules\Querry\Jobs\ProcessQuerryBuilder;
 use App\Modules\Querry\Models\Querry;
 use App\Modules\Querry\Services\ValidatePreSqlService;
 use App\Modules\Querry\Traits\HasUsedDimensions;
-use Illuminate\Support\Facades\Cache;
+
 class QuerryService
 {
     use HasUsedDimensions;
@@ -23,14 +23,7 @@ class QuerryService
 
     public function getData(string $hash)
     {
-        $cacheKey = "query_result_{$hash}";
 
-        if (!Cache::has($cacheKey)) {
-            return null; // Cache "miss"
-        }
-
-        // Se existe, pega o valor e retorna.
-        return Cache::get($cacheKey); // Cache "hit"
     }
 
     public function savePreSql(PreSqlDTO $pre_sql, $id = null): Querry
