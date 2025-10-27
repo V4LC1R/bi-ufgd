@@ -17,30 +17,47 @@ class ResultQueryService
     }
     public function getResultByHash(string $hash): array
     {
-        $cacheKey = "query_result_{$hash}";
+        $query = Querry::where('hash', $hash)
+            ->where('status', QuerryStatusEnum::SUCCESS)
+            ->firstOrFail();
 
-        // Tenta pegar do cache
-        $cachedResult = Cache::get($cacheKey);
+        $cacheKey = "query_result_{$hash}";
+        $connectionTag = "connection_{$query->connection_id}";
+
+        // 3. TENTA PEGAR DO CACHE (AGORA USANDO A TAG CORRETA)
+        $cachedResult = Cache::tags([$connectionTag])->get($cacheKey);
 
         if ($cachedResult !== null) {
-            return $cachedResult; // Cache "hit"
+            return [
+                'fields' => array_keys($cachedResult[0]),
+                'data' => $cachedResult,
+                'by' => 'RD'
+            ]; // Cache "hit"
         }
 
         // Cache "miss": chama o método privado para fazer o trabalho pesado.
-        return $this->findAndExecuteQuery($hash);
+        return $this->findAndExecuteQuery($query);
     }
 
     /**
      * Método privado que encontra a query no banco e a executa.
      * @throws ModelNotFoundException se a query não for encontrada.
      */
-    private function findAndExecuteQuery(string $hash): array
+    private function findAndExecuteQuery(Querry $query): array
     {
-        // 1. BUSCA A QUERY (ou falha com uma exceção clara)
-        $query = Querry::where('hash', $hash)
-            ->where('status', QuerryStatusEnum::SUCCESS)
-            ->firstOrFail();
+        $result = $this->query_excutor->executeAndCache($query);
 
-        return $this->query_excutor->executeAndCache($query);
+        if (empty($result)) {
+            return [
+                'fields' => [], // Sem campos se não há dados
+                'data' => []
+            ];
+        }
+
+        return [
+            'fields' => array_keys($result[0]),
+            'data' => $result,
+            'by' => 'DB'
+        ];
     }
 }

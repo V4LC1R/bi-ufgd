@@ -41,7 +41,7 @@ class DimensionDataService
         // 3. Delega a aplicação dos filtros para um método auxiliar.
         $this->applyFilters($query, $dto->filters);
 
-        $columns = array_keys(json_decode($table->columns, true));
+        $columns = array_keys($table->columns);
 
         if (in_array($dto->sortBy, $columns))
             $query->orderBy($dto->sortBy, $dto->sortDirection);

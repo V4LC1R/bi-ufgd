@@ -23,7 +23,9 @@ class ExecuteSqlService implements QueryExecutor
     {
         try {
 
-            $result = $this->execute($query->connection, $query);
+            $response = $this->execute($query->connection, $query);
+
+            $result = json_decode(json_encode($response), true);
 
             $query->status = QuerryStatusEnum::SUCCESS;
 

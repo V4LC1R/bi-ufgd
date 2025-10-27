@@ -74,7 +74,7 @@ class StructTableService implements StructTable
 
         $this->getConnection();
 
-        $tables = Tables::select(['name', 'alias', 'columns', 'type'])
+        $tables = Tables::select(['name', 'columns', 'type'])
             ->where('connection_id', $this->connection->id)
             ->get();
 
@@ -94,6 +94,18 @@ class StructTableService implements StructTable
         $this->roles = [];
         foreach ($this->getTables() as $table) {
             $this->roles[$table->type][$table->name] = $table;
+        }
+
+        return $this->roles;
+    }
+
+    public function getTablesNames(): array
+    {
+        if (!$this->connectionName)
+            throw new \Exception("Connection name not found!");
+
+        foreach ($this->getTables() as $table) {
+            $this->roles[$table->type][] = $table->name;
         }
 
         return $this->roles;
