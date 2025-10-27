@@ -39,4 +39,7 @@ interface StructTable
     public function getConnection();
 
     public function getDriver(): string;
+
+
+    public function getTablesNames(): array;
 }

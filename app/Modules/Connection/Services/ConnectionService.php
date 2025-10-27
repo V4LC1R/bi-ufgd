@@ -19,6 +19,11 @@ class ConnectionService
     ) {
     }
 
+    public function getList()
+    {
+        return Connection::select(['id', 'name'])->get();
+    }
+
     public function create(ConnectionDTO $dto)
     {
         try {
