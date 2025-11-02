@@ -3,6 +3,7 @@
 namespace App\Modules\Querry\Builder;
 
 
+use App\Modules\Querry\Http\DTOs\FactColumnDTO;
 use App\Modules\Querry\Http\DTOs\FactDTO;
 use App\Modules\Connection\Http\DTOs\TableDTO;
 use App\Modules\Query\Exceptions\BuildQueryError;
@@ -64,6 +65,8 @@ class FactBuilder extends BaseBuilder
                     if ($filter) {
                         $this->aggregationFilter($filter['op'], $filter['value'], $agg, $colName);
                     }
+
+                    $this->ordenate($actions, $agg);
                 }
 
                 foreach ($actions->linear as $linear_op) {
@@ -150,6 +153,29 @@ class FactBuilder extends BaseBuilder
             return;
 
         $this->query->where($col, $dictionary[$op], $value);
+    }
+
+    private function ordenate(FactColumnDTO $action, string $agg)
+    {
+        $orderDirection = $action->order[$agg] ?? null;
+
+        if (!$orderDirection) {
+            return;
+        }
+
+        $alias = $action->alias[$agg] ?? null;
+
+        if ($alias) {
+            return $this->query->orderBy($alias, $orderDirection);
+        }
+
+        $aggExpr = $this->aggregationSelect($agg, $action->name, null);
+
+        if ($aggExpr) {
+            $grammar = $this->query->getGrammar();
+            $this->query->orderByRaw($aggExpr->getValue($grammar) . ' ' . $orderDirection);
+        }
+
     }
 
 }

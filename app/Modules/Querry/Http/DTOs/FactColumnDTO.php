@@ -17,7 +17,10 @@ class FactColumnDTO
 
     public array $alias = [];
 
-    
+    /** @var array mapeamento de agregação para direção (ex: ["avg" => "desc"]) */
+    public array $order = []; // <-- Propriedade adicionada
+
+
     public function __construct(string $name, array $data)
     {
         $this->name = $name;
@@ -25,16 +28,19 @@ class FactColumnDTO
         $this->aggregates = $data['aggregates'] ?? [];
         $this->linear = $data['linear'] ?? [];
         $this->filter = $data['filter'] ?? [];
+        $this->order = $data['order'] ?? []; //
     }
 
     public function toArray(): array
     {
         return [
-            'name'       => $this->name,
+            'name' => $this->name,
             'aggregates' => $this->aggregates,
-            'linear'     => $this->linear,
-            'filter'     => $this->filter,
-            'alias'      => $this->alias 
+            'linear' => $this->linear,
+            'filter' => $this->filter,
+            'alias' => $this->alias,
+            'order' => $this->order
         ];
     }
 }
+

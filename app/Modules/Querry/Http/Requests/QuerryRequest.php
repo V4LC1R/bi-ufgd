@@ -3,6 +3,7 @@
 namespace App\Modules\Querry\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class QuerryRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class QuerryRequest extends FormRequest
     {
         return [
             'connectionName' => ['required', 'string'],
-
+            'description' => ['required', 'string'],
             'fact' => ['required', 'array'],
             'fact.limit' => ['required', 'integer', 'min:0'],
             'fact.columns' => ['required', 'array', 'min:1'],
@@ -26,19 +27,23 @@ class QuerryRequest extends FormRequest
             'fact.columns.*.linear' => ['sometimes', 'array'],
             'fact.columns.*.linear.*' => ['string'],
 
-            'fact.columns.*.as' => ['sometimes', 'array'],
-            'fact.columns.*.as.*' => ['string'],
+            'fact.columns.*.alias' => ['sometimes', 'array'],
+            'fact.columns.*.alias.*' => ['string'],
+
+            'fact.columns.*.order' => ['sometimes', 'array'],
+            'fact.columns.*.order.*' => ['string', Rule::in(['asc', 'desc'])],
 
             'fact.columns.*.filter' => ['sometimes', 'array'],
 
             'dimensions' => ['sometimes', 'array'],
             'dimensions.*.table' => ['required_with:dimensions', 'string'],
-            'dimensions.*.columns' => ['sometimes', 'array'],
+            'dimensions.*.columns' => ['sometimes', 'array', 'min:1'],
+            'dimensions.*.group' => ['sometimes', 'boolean'], // <-- REGRA ADICIONADA
 
             'sub-dimension' => ['sometimes', 'array'],
             'sub-dimension.*.table' => ['required_with:sub-dimension', 'string'],
             'sub-dimension.*.columns' => ['sometimes', 'array', 'min:1'],
-            'sub-dimension.*.parent' => ['sometimes', 'string'],
+            'sub-dimension.*.parent' => ['sometimes', 'string']
         ];
     }
 
@@ -65,8 +70,12 @@ class QuerryRequest extends FormRequest
             'fact.columns.*.linear.array' => 'O campo linear deve ser um array.',
             'fact.columns.*.linear.*.string' => 'Cada item de linear deve ser uma string.',
 
-            'fact.columns.*.as.array' => 'O campo as deve ser um array.',
-            'fact.columns.*.as.*.string' => 'Cada item de as deve ser uma string.',
+            'fact.columns.*.alias.array' => 'O campo alias deve ser um array.',
+            'fact.columns.*.alias.*.string' => 'Cada item de alias deve ser uma string.',
+
+            'fact.columns.*.order.array' => 'O campo order deve ser um array (objeto).',
+            'fact.columns.*.order.*.string' => 'A direção de order deve ser uma string.',
+            'fact.columns.*.order.*.in' => 'A direção de order deve ser apenas "asc" ou "desc".',
 
             'fact.columns.*.filter.array' => 'O campo filter deve ser um array.',
 
@@ -83,7 +92,7 @@ class QuerryRequest extends FormRequest
             'sub-dimension.*.columns.required_with' => 'O campo columns é obrigatório em sub-dimension.',
             'sub-dimension.*.columns.array' => 'O campo columns em sub-dimension deve ser um array.',
             'sub-dimension.*.columns.min' => 'O campo columns em sub-dimension deve ter pelo menos 1 item.',
-            'sub-dimension.*.parent.string'=> 'O caminho pelo parent tem que ser string'
+            'sub-dimension.*.parent.string' => 'O caminho pelo parent tem que ser string'
         ];
     }
 }

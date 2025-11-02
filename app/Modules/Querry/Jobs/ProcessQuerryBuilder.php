@@ -2,7 +2,6 @@
 namespace App\Modules\Querry\Jobs;
 
 use App\Modules\Connection\Jobs\ProcessQuerryExecute;
-use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 use App\Modules\Querry\Models\Querry;
 use App\Modules\Querry\Services\BuildQuerryService;
 

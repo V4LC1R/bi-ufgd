@@ -43,7 +43,10 @@ class ConnectionService
                 ];
             }
             Tables::insert($tables);
+
             DB::commit();
+
+            return $connection;
         } catch (\Throwable $th) {
             DB::rollBack();
             throw new \Exception($th->getMessage());

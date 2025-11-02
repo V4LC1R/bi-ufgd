@@ -6,13 +6,12 @@ class SubDimensionDTO extends DimensionDTO
 {
     public ?string $parent;
 
-   
+
 
     public function __construct(array $data)
     {
         parent::__construct($data);
         $this->parent = $data['parent'] ?? null;
-
     }
 
     public function toArray(): array
@@ -20,7 +19,7 @@ class SubDimensionDTO extends DimensionDTO
         return array_merge(
             parent::toArray(),
             [
-                'parent'=>$this->parent
+                'parent' => $this->parent
             ]
         );
     }

@@ -1,14 +1,14 @@
 {
-    "database":"graduacao",
+    "connectionName":"graduacao",
     "dimensions":[
          {
             "table": "First",
             "columns": ["id", "name"],
+            "alias": {
+				"name": "xxxx"
+			},
             "filter": {
                 "id": { "op": "=", "value": 10 }
-            },
-            "order":{
-                "id":"desc"
             }
         }
     ],
@@ -16,20 +16,29 @@
         {
             "table": "First",
             "columns": ["id", "name"],
+            "alias": {
+				"name": "yyyy"
+			},
             "filter": {
                 "id": { "op": "=", "value": 10 }
-            },
-            "order":{
-                "id":"desc"
             }
         }
     ],
     "fact":{
-        "colunms":{
+        "columns":{
             "colunm_a":{
-                "operation":["avg","sum",":list"],
+                "aggregates":["avg","sum",":list"],
+                "linear":["gt"],
+                "alias": {
+					"avg": "Média aproveitamento"
+				},
+                "order":{
+                    "avg":"desc",
+                    "sum":"asc"
+                },
                 "filter": {
-                    "avg": { "op": ">", "value": 5 ,"order":"desc"}
+                    "avg": { "op": ">", "value": 5},
+                    "gt":1
                 }
             } 
         }

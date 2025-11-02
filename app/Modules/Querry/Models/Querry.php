@@ -21,7 +21,8 @@ class Querry extends Model
         'status',
         'binds',
         'literal_query',
-        'error_message'
+        'error_message',
+        'description'
     ];
 
     protected $casts = [

@@ -1,5 +1,5 @@
 <?php
-namespace App\Modules\Reports\Routes;
+namespace App\Modules\Querry\Routes;
 
 use App\Modules\Querry\Http\Controllers\QuerryController;
 use Illuminate\Support\Facades\Route;

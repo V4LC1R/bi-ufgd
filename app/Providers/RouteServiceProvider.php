@@ -25,7 +25,7 @@ class RouteServiceProvider extends ServiceProvider
 
             if (File::exists($routesPath . '/api.php')) {
                 Route::prefix('api/' . strtolower($moduleName))
-
+                    ->middleware('api')
                     ->group($routesPath . '/api.php');
             }
         }

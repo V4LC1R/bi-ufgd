@@ -3,11 +3,13 @@ namespace App\Modules\Connection\Services;
 
 use App\Modules\Connection\Contracts\DynamicConnectionManager;
 
+use App\Modules\Connection\Contracts\FieldRelationResult;
 use App\Modules\Connection\Errors\CacheQueryMissingError;
 use App\Modules\Connection\Errors\QueryExecutionException;
 use App\Modules\Connection\Models\Connection;
 use App\Modules\Connection\Contracts\QueryExecutor;
 use App\Modules\Querry\Constants\QuerryStatusEnum;
+use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 use App\Modules\Querry\Models\Querry;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 class ExecuteSqlService implements QueryExecutor
 {
     public function __construct(
-        protected DynamicConnectionManager $conn_manager
+        protected DynamicConnectionManager $conn_manager,
+        protected FieldRelationResult $fields
     ) {
     }
 
@@ -57,8 +60,17 @@ class ExecuteSqlService implements QueryExecutor
             throw new QueryExecutionException("O SQL para a Query ID {$query->id} não foi gerado ou não foi encontrado.");
         }
 
-        return DB::connection($this->conn_manager->setup($conn))
+        $data = DB::connection($this->conn_manager->setup($conn))
             ->select($query->literal_query, json_decode($query->binds) ?? []);
+
+        $dto = new PreSqlDTO($query->struct);
+
+        $fields = $this->fields->setup($dto);
+
+        return [
+            'data' => $data,
+            'fields' => $fields
+        ];
     }
 
     private function cache(Querry $query, $result)
@@ -72,5 +84,6 @@ class ExecuteSqlService implements QueryExecutor
                 $result,
                 now()->addHours(24)
             );
+
     }
 }

@@ -42,9 +42,12 @@ class ConnectionController extends Controller
         try {
             $dto = new ConnectionDTO($request->all());
 
-            $this->service->create($dto);
+            $conn = $this->service->create($dto);
 
-            return response()->json(["message" => "Connection Saved!"], 201);
+            return response()->json([
+                "message" => "Connection Saved!",
+                'id' => $conn->id
+            ], 201);
         } catch (\Exception $th) {
             return response()
                 ->json([
