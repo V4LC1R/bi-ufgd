@@ -25,6 +25,20 @@ class QuerryService
         return Querry::findOrFail($id)->struct;
     }
 
+    public function getAllByConnId($conn_id)
+    {
+        return Querry::select([
+            'id',
+            'hash',
+            'description',
+            'status',
+            'error_message'
+        ])
+            ->where('connection_id', $conn_id)
+            ->orderBy('id', 'desc')
+            ->get();
+    }
+
     public function savePreSql(PreSqlDTO $pre_sql, $id = null): Querry
     {
         $this->validate($pre_sql);

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Query\Exceptions;
+namespace App\Modules\Querry\Errors;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

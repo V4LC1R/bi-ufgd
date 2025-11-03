@@ -29,9 +29,11 @@ class BuildQuerryService
             $dto = new PreSqlDTO($pre_querry->struct);
 
             $tables = $this->getEntities($dto);
-            $this->bridge->resolve($dto);
+
+            $dto = $this->bridge->resolve($dto);
 
             $query = FactBuilder::fill($tables['fact'], $dto->fact, $this->getConnectionPool());
+
             DimensionBuilder::fill($tables['fact'], $dto->dimensions, $query);
             SubDimensionBuilder::fill($tables['dimensions'], $dto->subDimensions, $query);
 

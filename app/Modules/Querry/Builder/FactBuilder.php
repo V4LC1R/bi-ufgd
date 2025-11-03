@@ -3,10 +3,10 @@
 namespace App\Modules\Querry\Builder;
 
 
+use App\Modules\Querry\Errors\BuildQueryError;
 use App\Modules\Querry\Http\DTOs\FactColumnDTO;
 use App\Modules\Querry\Http\DTOs\FactDTO;
 use App\Modules\Connection\Http\DTOs\TableDTO;
-use App\Modules\Query\Exceptions\BuildQueryError;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -69,6 +69,7 @@ class FactBuilder extends BaseBuilder
                     $this->ordenate($actions, $agg);
                 }
 
+                dd($actions);
                 foreach ($actions->linear as $linear_op) {
                     if (isset($actions->filter[$linear_op])) {
                         $this->linearFilter($linear_op, $actions->filter[$linear_op], $colName);

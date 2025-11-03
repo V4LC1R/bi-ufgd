@@ -29,6 +29,7 @@ class FactColumnDTO
         $this->linear = $data['linear'] ?? [];
         $this->filter = $data['filter'] ?? [];
         $this->order = $data['order'] ?? []; //
+
     }
 
     public function toArray(): array
