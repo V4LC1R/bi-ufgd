@@ -42,4 +42,6 @@ interface StructTable
 
 
     public function getTablesNames(): array;
+
+    public function getFactStruct(string $connection_name): array;
 }

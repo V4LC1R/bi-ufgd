@@ -75,6 +75,23 @@ class ConnectionController extends Controller
         }
     }
 
+    public function fact($connection_name)
+    {
+        try {
+            $tables = $this
+                ->struct_table
+                ->getFactStruct($connection_name);
+
+            return response()->json($tables);
+        } catch (\Exception $th) {
+            return response()
+                ->json([
+                    "message" => "Err to save connection!",
+                    "reason" => $th->getMessage()
+                ], 500);
+        }
+    }
+
     public function edit(ConnectionRequest $request, $conn_id)
     {
         try {

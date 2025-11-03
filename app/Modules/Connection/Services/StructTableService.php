@@ -139,4 +139,15 @@ class StructTableService implements StructTable
         return $relations;
     }
 
+    public function getFactStruct(string $connection_name): array
+    {
+        $list = $this
+            ->setConnectionName($connection_name)
+            ->getStructConnection()['fact'];
+
+        $fact_name = array_keys($list)[0];
+        return array_keys($list[$fact_name]->columns);
+
+    }
+
 }

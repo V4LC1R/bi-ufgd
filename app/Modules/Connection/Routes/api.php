@@ -9,6 +9,8 @@ Route::post('/', [ConnectionController::class, 'store']);
 Route::patch('/{id}', [ConnectionController::class, 'edit']);
 Route::get('/', [ConnectionController::class, 'index']);
 Route::get('/{connection_name}/struct', [ConnectionController::class, 'struct']);
+Route::get('/{connection_name}/fact', [ConnectionController::class, 'fact']);
 Route::get('/{conn_id}/dimension', [DimensionDataController::class, 'search']);
+
 
 
