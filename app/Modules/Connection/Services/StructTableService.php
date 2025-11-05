@@ -147,7 +147,6 @@ class StructTableService implements StructTable
 
         $fact_name = array_keys($list)[0];
         return array_keys($list[$fact_name]->columns);
-
     }
 
 }

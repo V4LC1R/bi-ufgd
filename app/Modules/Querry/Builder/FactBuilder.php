@@ -69,13 +69,11 @@ class FactBuilder extends BaseBuilder
                     $this->ordenate($actions, $agg);
                 }
 
-                dd($actions);
                 foreach ($actions->linear as $linear_op) {
                     if (isset($actions->filter[$linear_op])) {
                         $this->linearFilter($linear_op, $actions->filter[$linear_op], $colName);
                     }
                 }
-
             }
 
             if (!empty($selects)) {

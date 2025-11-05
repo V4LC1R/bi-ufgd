@@ -40,7 +40,7 @@ class ValidatePreSqlService
         foreach ($dimensions_pre_sql as $pre_sql) {
 
             if (!isset($struct[$pre_sql->table])) {
-                $this->errors["dimension-{$pre_sql->table}"][] = "Table '{$pre_sql->table}' not found in connection struct.";
+                $this->errors[] = "Dimension table '{$pre_sql->table}' not found in connection struct.";
                 continue;
             }
 
@@ -61,7 +61,7 @@ class ValidatePreSqlService
         foreach ($dimensions_pre_sql as $pre_sql) {
 
             if (!isset($struct[$pre_sql->table])) {
-                $this->errors["dimension-{$pre_sql->table}"][] = "Table '{$pre_sql->table}' not found in connection struct.";
+                $this->errors[] = "Sub-dimension '{$pre_sql->table}' not found in connection struct.";
                 continue;
             }
 
@@ -82,12 +82,12 @@ class ValidatePreSqlService
         $cols_spect = array_keys($fact_pre_sql->columns);
 
         if (!$fact_pre_sql->limit)
-            $this->errors["fact"]['table'][] = "Limit to Querry is not Found";
+            $this->errors[] = "Limit to Query is not Found";
 
         foreach ($cols_spect as $col_spec) {
 
             if (!array_key_exists($col_spec, $struct->columns)) {
-                $this->errors["fact"]['table'][] = "Column '{$col_spec}' not found in fact table.";
+                $this->errors[] = "The column '{$col_spec}' not found in fact table.";
                 continue;
             }
 
@@ -98,12 +98,11 @@ class ValidatePreSqlService
                 $fact_cols_pre_sql->linear ?? []
             );
 
-            $this->validateColumnActions($col, $actions, $col_spec);
-            ;
+            $this->validateColumnActions($col, $actions, $col_spec, 'Fato');
         }
     }
 
-    public function validateColumnActions(string $col_definition, array $actions, string $col_name): void
+    public function validateColumnActions(string $col_definition, array $actions, string $col_name, string $table): void
     {
         $parts = explode(":", $col_definition);
         $col_type = $parts[0];
@@ -111,14 +110,14 @@ class ValidatePreSqlService
         $type_ops = [
             'number' => ['sum', 'avg', 'min', 'max', 'gt', 'lt', 'gt-eq', 'lt-eq', 'eq', 'count', ':range', ':list', 'df'],
             'string' => ['eq', 'count', 'df'],
-            'date' => ['eq', 'count', ':range', ':list'],
-            'datetime' => ['eq', 'count', ':range', ':list'],
-            'time' => ['eq', 'count', ':range', ':list'],
+            'date' => ['gt', 'lt', 'gt-eq', 'lt-eq', 'eq', 'count', ':range', ':list'],
+            'datetime' => ['gt', 'lt', 'gt-eq', 'lt-eq', 'eq', 'count', ':range', ':list'],
+            'time' => ['gt', 'lt', 'gt-eq', 'lt-eq', 'eq', 'count', ':range', ':list'],
             'bool' => ['eq', 'df', ':list']
         ];
 
         if (!isset($type_ops[$col_type])) {
-            $this->errors['fact']['column'][$col_name][] = "Unknown column type '{$col_type}' for column '{$col_name}'.";
+            $this->errors[] = "Unknown column type '{$col_type}' for column '{$col_name}'.";
             return;
         }
 
@@ -126,7 +125,7 @@ class ValidatePreSqlService
 
         foreach ($actions as $act) {
             if (!in_array($act, $type_ops_for_col)) {
-                $this->errors['fact']['column'][$col_name][] = "Action '{$act}' cannot be applied to column '{$col_name}' of type '{$col_type}'.";
+                $this->errors[] = "Action '{$act}' cannot be applied to column '{$table}'.'{$col_name}' of type '{$col_type}'.";
             }
 
         }
@@ -137,7 +136,7 @@ class ValidatePreSqlService
         foreach ($filter as $col => $condition) {
 
             if (!array_key_exists($col, $table->columns)) {
-                $this->errors['dimensions']['table'][$table->name][] = "Column '{$col}' not found in table in {$table->name} table.";
+                $this->errors[] = "Column '{$col}' not found in table in {$table->name} table.";
                 continue;
             }
 
@@ -147,7 +146,7 @@ class ValidatePreSqlService
             $value = $condition['value'] ?? null;
 
             if (!$this->checkType($expected_type, $value))
-                $this->errors['dimensions']['table'][$table->name][] = "Invalid type for column '{$col}'. Expected {$expected_type}, got " . gettype($value);
+                $this->errors[] = "Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value);
         }
     }
 
