@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Query\Exceptions;
+namespace App\Modules\Querry\Errors;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,7 +61,7 @@ class ValidateQueryError extends RuntimeException
      * @param Request $request
      * @return JsonResponse
      */
-    public function render(Request $request): JsonResponse
+    public function render(): JsonResponse
     {
         return response()->json([
             'message' => $this->getMessage(),

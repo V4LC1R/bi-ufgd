@@ -4,6 +4,7 @@ namespace App\Modules\Querry\Services;
 use App\Modules\Connection\Contracts\StructTable;
 use App\Modules\Querry\Constants\QuerryStatusEnum;
 use App\Modules\Querry\Constants\QuerryType;
+use App\Modules\Querry\Errors\ValidateQueryError;
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 use App\Modules\Querry\Jobs\ProcessQuerryBuilder;
 use App\Modules\Querry\Models\Querry;
@@ -51,9 +52,9 @@ class QuerryService
         $this->validate_presql->compare($this->getEntities($pre_sql), $pre_sql);
 
         $errors = $this->validate_presql->getErrors();
+
         if (count($errors) > 0) {
-            // Lança uma exceção específica com os erros, que é uma prática melhor.
-            throw new \Exception(json_encode($this->validate_presql->getErrors()));
+            throw ValidateQueryError::withErrors($this->validate_presql->getErrors());
         }
     }
 

@@ -61,7 +61,7 @@ class ValidatePreSqlService
         foreach ($dimensions_pre_sql as $pre_sql) {
 
             if (!isset($struct[$pre_sql->table])) {
-                $this->errors[] = "Sub-dimension '{$pre_sql->table}' not found in connection struct.";
+                $this->errors[] = "Sub-dimension table '{$pre_sql->table}' not found in connection struct.";
                 continue;
             }
 
@@ -69,13 +69,14 @@ class ValidatePreSqlService
 
             $this->validateTypeField($table, $pre_sql->filter);
 
+            //$this->validateOperations($pre_sql->filter);
+
             if ($pre_sql->parent) {
                 //continuar daqui com parent
             }
 
         }
     }
-
 
     private function fact(TableDTO $struct, FactDTO $fact_pre_sql)
     {
@@ -131,6 +132,7 @@ class ValidatePreSqlService
         }
     }
 
+
     protected function validateTypeField(TableDTO $table, array $filter): void
     {
         foreach ($filter as $col => $condition) {
@@ -140,6 +142,7 @@ class ValidatePreSqlService
                 continue;
             }
 
+            //@TODO ajuste para suportar uma lista de operacoes em cima da msm coluna
             $col_table = $table->columns[$col];
 
             $expected_type = explode(":", $col_table)[0]; // pega só 'number', 'string', 'date', etc.
@@ -147,6 +150,11 @@ class ValidatePreSqlService
 
             if (!$this->checkType($expected_type, $value))
                 $this->errors[] = "Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value);
+
+            $operation = $condition['op'] ?? null;
+
+            $this->checkOperation($expected_type, $operation, $col, $table->name);
+
         }
     }
 
@@ -163,5 +171,28 @@ class ValidatePreSqlService
         };
     }
 
+    protected function checkOperation(string $col_type, string $operation, string $col_name, string $table): void
+    {
+
+        $type_ops = [
+            'number' => ['>', '>=', '=', '!=', '<>', '<', '<='],
+            'string' => ['=', '!=', '<>'],
+            'date' => ['>', '>=', '=', '!=', '<>', '<', '<='],
+            'datetime' => ['>', '>=', '=', '!=', '<>', '<', '<='],
+            'time' => ['>', '>=', '=', '!=', '<>', '<', '<='],
+            'bool' => ['=', '!=', '<>',]
+        ];
+
+        if (!isset($type_ops[$col_type])) {
+            $this->errors[] = "Unknown column type '{$col_type}' for column '{$col_name}'.";
+        }
+
+        $type_ops_for_col = $type_ops[$col_type] ?? [];
+
+        if (!in_array($operation, $type_ops_for_col)) {
+            $this->errors[] = "Operation '{$operation}' cannot be applied to column '{$table}'.'{$col_name}' of type '{$col_type}'.";
+        }
+
+    }
 
 }

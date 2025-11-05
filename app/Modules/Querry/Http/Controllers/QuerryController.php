@@ -1,6 +1,7 @@
 <?php
 namespace App\Modules\Querry\Http\Controllers;
 
+use App\Modules\Querry\Errors\ValidateQueryError;
 use App\Modules\Querry\Http\DTOs\PreSqlDTO;
 use App\Modules\Querry\Http\Requests\QuerryRequest;
 use App\Modules\Querry\Models\Querry;
@@ -24,6 +25,8 @@ class QuerryController extends Controller
             $dto = new PreSqlDTO($request->all());
             $query = $this->service->savePreSql($dto);
             return response()->json(["message" => "Querry was saved, await your execution!", "hash" => $query->hash]);
+        } catch (ValidateQueryError $th) {
+            return $th->render();
         } catch (\Throwable $th) {
             return response()->json([
                 "message" => "Querry not was saved!",
