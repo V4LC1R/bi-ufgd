@@ -39,7 +39,6 @@ services:
       - bi-ufgd-network
 
   mysql:
-    # ... (sem mudanças)
     container_name: datawarehouse-mysql
     image: 'mysql/mysql-server:8.0'
     ports:
@@ -55,6 +54,30 @@ services:
         - 'bi-ufgd-mysql:/var/lib/mysql'
     networks:
         - bi-ufgd-network
+    deploy:
+        resources:
+            limits:
+                cpus: '2.0'
+                memory: 3G
+            reservations:
+                memory: 2G
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --max-allowed-packet=256M
+      --innodb-buffer-pool-size=2147483648
+      --innodb-buffer-pool-instances=2
+      --max-connections=150
+      --tmp-table-size=67108864
+      --max-heap-table-size=67108864
+      --join-buffer-size=4194304
+      --sort-buffer-size=4194304
+      --table-open-cache=2000
+      --innodb-io-capacity=1000
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --skip-log-bin
+      --skip-name-resolve
+      --innodb-flush-log-at-trx-commit=2
     healthcheck:
         test:
             - CMD
@@ -63,7 +86,7 @@ services:
             - '-proot-pass'
         retries: 3
         timeout: 5s
-
+        interval: 10s
   redis:
     # ... (sem mudanças)
     image: redis:alpine

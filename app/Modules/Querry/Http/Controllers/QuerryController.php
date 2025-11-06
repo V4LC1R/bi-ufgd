@@ -41,6 +41,8 @@ class QuerryController extends Controller
             $dto = new PreSqlDTO($request->all());
             $query = $this->service->savePreSql($dto, $query_id);
             return response()->json(["message" => "Querry was saved, await your execution!", "hash" => $query->hash]);
+        } catch (ValidateQueryError $th) {
+            return $th->render();
         } catch (\Throwable $th) {
             return response()->json([
                 "message" => "Querry not was saved!",

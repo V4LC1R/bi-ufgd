@@ -145,14 +145,31 @@ class ValidatePreSqlService
             //@TODO ajuste para suportar uma lista de operacoes em cima da msm coluna
             $col_table = $table->columns[$col];
 
-            $expected_type = explode(":", $col_table)[0]; // pega só 'number', 'string', 'date', etc.
+            $expected_type = explode(":", $col_table)[0];
             $value = $condition['value'] ?? null;
-
-            if (!$this->checkType($expected_type, $value))
-                $this->errors[] = "Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value);
-
             $operation = $condition['op'] ?? null;
 
+            if ($operation == ':range') {
+                // CORREÇÃO 2: Validar se o valor do :range é seguro de usar
+                if (!is_array($value) || count($value) !== 2) {
+                    $this->errors[] = "Invalid value for ':range' on column '{$table->name}'.'{$col}'. Expected an array with two elements.";
+                } else {
+                    // Agora é seguro acessar $value[0] e $value[1]
+                    if (!$this->checkType($expected_type, $value[0])) {
+                        $this->errors[] = "(For range[0]) Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value[0]);
+                    }
+                    if (!$this->checkType($expected_type, $value[1])) {
+                        $this->errors[] = "(For range[1]) Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value[1]);
+                    }
+                }
+            } else if (!$this->checkType($expected_type, $value)) {
+                // Validação normal para outros operadores
+                $this->errors[] = "Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value);
+            }
+
+            // CORREÇÃO 1: A linha de erro que estava aqui foi REMOVIDA.
+
+            // Esta verificação permanece
             $this->checkOperation($expected_type, $operation, $col, $table->name);
 
         }
@@ -175,11 +192,11 @@ class ValidatePreSqlService
     {
 
         $type_ops = [
-            'number' => ['>', '>=', '=', '!=', '<>', '<', '<='],
+            'number' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
             'string' => ['=', '!=', '<>'],
-            'date' => ['>', '>=', '=', '!=', '<>', '<', '<='],
-            'datetime' => ['>', '>=', '=', '!=', '<>', '<', '<='],
-            'time' => ['>', '>=', '=', '!=', '<>', '<', '<='],
+            'date' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
+            'datetime' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
+            'time' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
             'bool' => ['=', '!=', '<>',]
         ];
 

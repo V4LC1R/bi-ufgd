@@ -11,9 +11,9 @@
     "tables":[
         {
             "type":"dimension",
-            "tableName":"First",
+            "name":"First",
             "alias":"fst",
-            "struct":{
+            "columns":{
                 "id":"number:pk",
                 "born":"date",
                 "out":"time",
@@ -24,9 +24,9 @@
         },
         {
             "type":"sub-dimension",
-            "tableName":"Second",
+            "name":"Second",
             "alias":"scd",
-            "struct":{
+            "columns":{
                 "id":"number:pk",
                 "name":"string",
                 "id_first":"number:fk:First.id"
@@ -34,9 +34,9 @@
         },
          {
             "type":"fact",
-            "tableName":"Main",
+            "name":"Main",
             "alias":"mn",
-            "struct":{
+            "columns":{
                 "id":"number:pk",
                 "id_first":"number:fk:First.id",
                 "value_a":"number:fk:First.id"

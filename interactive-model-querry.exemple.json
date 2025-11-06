@@ -1,5 +1,6 @@
 {
     "connectionName":"graduacao",
+    "description": "Lorem ipsun",
     "dimensions":[
          {
             "table": "First",

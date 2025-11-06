@@ -83,13 +83,24 @@ class BaseBuilder implements TransformPreSql
 
         foreach ($filters as $col => $filter) {
             $col_wrap = $table_wrap . '.' . $grammar->wrap($col);
-            $allowedOps = ['=', '!=', '>', '>=', '<', '<=', 'like'];
-            if (!in_array($filter['op'], $allowedOps, true))
+            $allowedOps = ['=', '!=', '>', '>=', '<', '<=', 'like', ':range']; // :range mantido
+
+            if (!in_array($filter['op'], $allowedOps, true)) {
                 continue;
+            }
 
-            $filter['value'] = [$filter['value']];
+            if ($filter['op'] === ':range') {
 
-            $this->query->whereRaw($col_wrap . $filter['op'] . '?', $filter['value']);
+                if (is_array($filter['value']) && count($filter['value']) === 2) {
+                    // Usamos BETWEEN ? AND ? e passamos o array de valores
+                    $this->query->whereRaw($col_wrap . ' BETWEEN ? AND ?', $filter['value']);
+                }
+
+            } else {
+
+                $bindings = [$filter['value']];
+                $this->query->whereRaw($col_wrap . ' ' . $filter['op'] . ' ?', $bindings);
+            }
         }
 
     }
