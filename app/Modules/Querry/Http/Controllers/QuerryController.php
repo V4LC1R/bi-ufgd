@@ -28,6 +28,7 @@ class QuerryController extends Controller
         } catch (ValidateQueryError $th) {
             return $th->render();
         } catch (\Throwable $th) {
+            dd($th);
             return response()->json([
                 "message" => "Querry not was saved!",
                 "reason" => $th->getMessage()

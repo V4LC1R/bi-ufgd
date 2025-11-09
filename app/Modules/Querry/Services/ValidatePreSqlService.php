@@ -142,36 +142,77 @@ class ValidatePreSqlService
                 continue;
             }
 
-            //@TODO ajuste para suportar uma lista de operacoes em cima da msm coluna
             $col_table = $table->columns[$col];
-
             $expected_type = explode(":", $col_table)[0];
             $value = $condition['value'] ?? null;
             $operation = $condition['op'] ?? null;
 
-            if ($operation == ':range') {
-                // CORREÇÃO 2: Validar se o valor do :range é seguro de usar
-                if (!is_array($value) || count($value) !== 2) {
-                    $this->errors[] = "Invalid value for ':range' on column '{$table->name}'.'{$col}'. Expected an array with two elements.";
-                } else {
-                    // Agora é seguro acessar $value[0] e $value[1]
-                    if (!$this->checkType($expected_type, $value[0])) {
-                        $this->errors[] = "(For range[0]) Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value[0]);
-                    }
-                    if (!$this->checkType($expected_type, $value[1])) {
-                        $this->errors[] = "(For range[1]) Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value[1]);
-                    }
+            // Validação de tipos baseada na operação
+            if (in_array($operation, [':range', ':in'], true)) {
+                $this->validateSpecialOperation($operation, $value, $expected_type, $col, $table->name);
+            } else {
+                // Validação normal para operadores simples
+                if (!$this->checkType($expected_type, $value)) {
+                    $this->errors[] = "Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value);
                 }
-            } else if (!$this->checkType($expected_type, $value)) {
-                // Validação normal para outros operadores
-                $this->errors[] = "Invalid type for column '{$table->name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value);
             }
 
-            // CORREÇÃO 1: A linha de erro que estava aqui foi REMOVIDA.
-
-            // Esta verificação permanece
+            // Verifica se a operação é válida para o tipo
             $this->checkOperation($expected_type, $operation, $col, $table->name);
+        }
+    }
 
+    /**
+     * Valida operações especiais que recebem arrays como valor (:range, :in)
+     */
+    protected function validateSpecialOperation(string $operation, $value, string $expected_type, string $col, string $table_name): void
+    {
+        if ($operation === ':range') {
+            $this->validateRangeOperation($value, $expected_type, $col, $table_name);
+        } elseif ($operation === ':in') {
+            $this->validateInOperation($value, $expected_type, $col, $table_name);
+        }
+    }
+
+    /**
+     * Valida a operação :range
+     */
+    protected function validateRangeOperation($value, string $expected_type, string $col, string $table_name): void
+    {
+        if (!is_array($value) || count($value) !== 2) {
+            $this->errors[] = "Invalid value for ':range' on column '{$table_name}'.'{$col}'. Expected an array with two elements.";
+            return;
+        }
+
+        if (!$this->checkType($expected_type, $value[0])) {
+            $this->errors[] = "(For range[0]) Invalid type for column '{$table_name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value[0]);
+        }
+
+        if (!$this->checkType($expected_type, $value[1])) {
+            $this->errors[] = "(For range[1]) Invalid type for column '{$table_name}'.'{$col}'. Expected {$expected_type}, got " . gettype($value[1]);
+        }
+    }
+
+    /**
+     * Valida a operação :in
+     */
+    protected function validateInOperation($value, string $expected_type, string $col, string $table_name): void
+    {
+        if (!is_array($value)) {
+            $this->errors[] = "Invalid value for ':in' on column '{$table_name}'.'{$col}'. Expected an array.";
+            return;
+        }
+
+        if (empty($value)) {
+            $this->errors[] = "Invalid value for ':in' on column '{$table_name}'.'{$col}'. Array cannot be empty.";
+            return;
+        }
+
+        // Valida cada item do array
+        foreach ($value as $index => $item) {
+            if (!$this->checkType($expected_type, $item)) {
+                $this->errors[] = "(For in[{$index}]) Invalid type for column '{$table_name}'.'{$col}'. Expected {$expected_type}, got " . gettype($item);
+            }
         }
     }
 
@@ -192,12 +233,12 @@ class ValidatePreSqlService
     {
 
         $type_ops = [
-            'number' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
-            'string' => ['=', '!=', '<>'],
-            'date' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
-            'datetime' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
-            'time' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range'],
-            'bool' => ['=', '!=', '<>',]
+            'number' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range', ':in'],
+            'string' => ['=', '!=', '<>', ':in'],
+            'date' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range', ':in'],
+            'datetime' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range', ':in'],
+            'time' => ['>', '>=', '=', '!=', '<>', '<', '<=', ':range', ':in'],
+            'bool' => ['=', '!=', '<>', ':in']
         ];
 
         if (!isset($type_ops[$col_type])) {

@@ -78,30 +78,33 @@ class BaseBuilder implements TransformPreSql
     protected function filter(string $table, array $filters)
     {
         $grammar = $this->query->getGrammar();
-        ;
         $table_wrap = $grammar->wrapTable($table);
 
         foreach ($filters as $col => $filter) {
             $col_wrap = $table_wrap . '.' . $grammar->wrap($col);
-            $allowedOps = ['=', '!=', '>', '>=', '<', '<=', 'like', ':range']; // :range mantido
+            $allowedOps = ['=', '!=', '>', '>=', '<', '<=', 'like', ':range', ':in'];
 
             if (!in_array($filter['op'], $allowedOps, true)) {
                 continue;
             }
 
             if ($filter['op'] === ':range') {
-
                 if (is_array($filter['value']) && count($filter['value']) === 2) {
                     // Usamos BETWEEN ? AND ? e passamos o array de valores
                     $this->query->whereRaw($col_wrap . ' BETWEEN ? AND ?', $filter['value']);
                 }
-
+            } elseif ($filter['op'] === ':in') {
+                // Tratamento para IN
+                if (is_array($filter['value']) && !empty($filter['value'])) {
+                    // Cria os placeholders (?, ?, ?)
+                    $placeholders = implode(',', array_fill(0, count($filter['value']), '?'));
+                    $this->query->whereRaw($col_wrap . ' IN (' . $placeholders . ')', $filter['value']);
+                }
             } else {
-
+                // Operadores normais
                 $bindings = [$filter['value']];
                 $this->query->whereRaw($col_wrap . ' ' . $filter['op'] . ' ?', $bindings);
             }
         }
-
     }
 }

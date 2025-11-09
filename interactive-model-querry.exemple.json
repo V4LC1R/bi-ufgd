@@ -9,7 +9,9 @@
 				"name": "xxxx"
 			},
             "filter": {
-                "id": { "op": "=", "value": 10 }
+                "id": { "op": "=", "value": 10 },
+                "name": { "op": ":in", "value": ["Jose","Carlos","Augusto"] },
+                "birth": { "op": ":range", "value": ["05-07-2003","24-08-2003"] }
             }
         }
     ],
