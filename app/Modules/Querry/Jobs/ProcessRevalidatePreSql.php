@@ -34,6 +34,7 @@ class ProcessRevalidatePreSql implements ShouldQueue
 
                         } catch (\Throwable $th) {
                             $query->status = QuerryStatusEnum::INVALID;
+                            $query->error_message = $th->getMessage();
                             $query->save();
                         }
                     }

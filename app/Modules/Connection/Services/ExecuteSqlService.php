@@ -31,6 +31,7 @@ class ExecuteSqlService implements QueryExecutor
             $result = json_decode(json_encode($response), true);
 
             $query->status = QuerryStatusEnum::SUCCESS;
+            $query->error_message = '';
 
             $this->cache($query, $result);
 

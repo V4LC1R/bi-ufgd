@@ -24,8 +24,9 @@ class ProcessQuerryBuilder implements ShouldQueue
 
     public function handle(BuildQuerryService $builder)
     {
+        $pre_sql = Querry::find($this->querry_id);
+
         try {
-            $pre_sql = Querry::find($this->querry_id);
 
             if (!$pre_sql) {
                 \Log::error("Querry ID {$this->querry_id} não encontrado!");
@@ -38,6 +39,11 @@ class ProcessQuerryBuilder implements ShouldQueue
 
             ProcessQuerryExecute::dispatch($this->querry_id);
         } catch (\Throwable $th) {
+            if ($pre_sql) {
+                $pre_sql->error_message = $th->getMessage();
+                $pre_sql->save();
+            }
+
             throw $th;
         }
     }

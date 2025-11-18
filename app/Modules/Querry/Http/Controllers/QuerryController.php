@@ -28,9 +28,8 @@ class QuerryController extends Controller
         } catch (ValidateQueryError $th) {
             return $th->render();
         } catch (\Throwable $th) {
-            dd($th);
             return response()->json([
-                "message" => "Querry not was saved!",
+                "message" => "Query not was saved!",
                 "reason" => $th->getMessage()
             ], 500);
         }
@@ -46,7 +45,25 @@ class QuerryController extends Controller
             return $th->render();
         } catch (\Throwable $th) {
             return response()->json([
-                "message" => "Querry not was saved!",
+                "message" => "Query not was saved!",
+                "reason" => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function retry($query_id)
+    {
+        try {
+            $query = $this->service->getQuery($query_id);
+            dd($query);
+            $dto = new PreSqlDTO($query->struct);
+            $this->service->savePreSql($dto, $query_id);
+            return response()->json(["message" => "Retry was acept, await execution!", "hash" => $query->hash]);
+        } catch (ValidateQueryError $th) {
+            return $th->render();
+        } catch (\Throwable $th) {
+            return response()->json([
+                "message" => "Retry was reject!",
                 "reason" => $th->getMessage()
             ], 500);
         }
@@ -62,7 +79,7 @@ class QuerryController extends Controller
             return response()->json($response);
         } catch (\Throwable $th) {
             return response()->json([
-                "message" => "Querry not was saved!",
+                "message" => "Query not found!",
                 "reason" => $th->getMessage()
             ], 500);
         }
@@ -75,7 +92,20 @@ class QuerryController extends Controller
             return response()->json($response);
         } catch (\Throwable $th) {
             return response()->json([
-                "message" => "Querry not was saved!",
+                "message" => "Query not found!",
+                "reason" => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function showByHash($hash)
+    {
+        try {
+            $response = $this->service->getQueryByHash($hash);
+            return response()->json($response);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "message" => "Query not found!",
                 "reason" => $th->getMessage()
             ], 500);
         }
@@ -88,7 +118,7 @@ class QuerryController extends Controller
             return response()->json($response);
         } catch (\Throwable $th) {
             return response()->json([
-                "message" => "Querry not was saved!",
+                "message" => "Queries not found!",
                 "reason" => $th->getMessage()
             ], 500);
         }
@@ -103,7 +133,20 @@ class QuerryController extends Controller
             return response()->json($response);
         } catch (\Throwable $th) {
             return response()->json([
-                "message" => "Querry not was builded!",
+                "message" => "Query not was builded!",
+                "reason" => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function delete($id)
+    {
+        try {
+            $this->service->destroy($id);
+            return response()->json(['message' => 'Query was deleted!']);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "message" => "Query not was builded!",
                 "reason" => $th->getMessage()
             ], 500);
         }

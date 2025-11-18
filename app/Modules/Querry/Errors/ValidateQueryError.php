@@ -50,7 +50,9 @@ class ValidateQueryError extends RuntimeException
     {
         Log::warning('Falha na validação da Pre-Query:', [
             'message' => $this->getMessage(),
-            'errors' => $this->errors,
+            'errors' => [
+                "descriptions" => $this->errors
+            ],
         ]);
     }
 

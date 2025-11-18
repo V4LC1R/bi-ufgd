@@ -37,12 +37,12 @@ class QuerryRequest extends FormRequest
 
             'dimensions' => ['sometimes', 'array'],
             'dimensions.*.table' => ['required_with:dimensions', 'string'],
-            'dimensions.*.columns' => ['sometimes', 'array', 'min:1'],
+            'dimensions.*.columns' => ['sometimes', 'array'],
             'dimensions.*.group' => ['sometimes', 'boolean'], // <-- REGRA ADICIONADA
 
             'sub-dimension' => ['sometimes', 'array'],
             'sub-dimension.*.table' => ['required_with:sub-dimension', 'string'],
-            'sub-dimension.*.columns' => ['sometimes', 'array', 'min:1'],
+            'sub-dimension.*.columns' => ['sometimes', 'array'],
             'sub-dimension.*.parent' => ['sometimes', 'string']
         ];
     }

@@ -6,6 +6,7 @@ use App\Modules\Querry\Constants\QuerryStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 class Querry extends Model
 {
@@ -38,6 +39,15 @@ class Querry extends Model
     {
         $this->status = $status;
         $this->save();
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($query) {
+            $query->hash = (string) Str::uuid();
+        });
     }
 
     public function connection()

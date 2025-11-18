@@ -26,6 +26,16 @@ class QuerryService
         return Querry::findOrFail($id)->struct;
     }
 
+    public function getQueryByHash(string $hash)
+    {
+        return Querry::where('hash', $hash)->first();
+    }
+
+    public function destroy(int $id)
+    {
+        return Querry::findOrFail($id)->delete();
+    }
+
     public function getAllByConnId($conn_id)
     {
         return Querry::select([
@@ -33,7 +43,8 @@ class QuerryService
             'hash',
             'description',
             'status',
-            'error_message'
+            'error_message',
+            'struct'
         ])
             ->where('connection_id', $conn_id)
             ->orderBy('id', 'desc')
@@ -66,7 +77,6 @@ class QuerryService
             [ // Dados para criar ou atualizar
                 'connection_id' => $this->struct_service->getConnection()->id,
                 'description' => $pre_sql->description,
-                'hash' => $this->generateStableHash($pre_sql),
                 'type' => QuerryType::JSON,
                 'struct' => $pre_sql->toArray(),
                 'status' => QuerryStatusEnum::PENDING,
@@ -76,16 +86,5 @@ class QuerryService
         ProcessQuerryBuilder::dispatch($query->id);
 
         return $query;
-    }
-
-    private function generateStableHash(PreSqlDTO $dto): string
-    {
-        $data = $dto->toArray();
-        array_walk_recursive($data, function (&$value, $key) use (&$data) {
-            if (is_array($value))
-                ksort($value);
-        });
-        ksort($data);
-        return hash('sha256', json_encode($data));
     }
 }
