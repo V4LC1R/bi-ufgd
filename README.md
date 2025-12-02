@@ -1,61 +1,344 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Bi-UFGD - API Documentation
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Requisitos
 
-## About Laravel
+### Docker
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Docker Engine 20.10+
+- Docker Compose 2.0+
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Local
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2+
+- Composer 2.x
+- PostgreSQL 15+
+- MySQL 8.0+
+- MongoDB 7+
+- Redis
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Instalação
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Com Docker
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+# Clone e configure
+git clone <repositorio>
+cd bi-ufgd
+cp .env.example .env
 
-## Laravel Sponsors
+# Inicie os containers
+docker-compose up -d
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# Instale dependências
+docker exec -it bi-ufgd-app composer install
 
-### Premium Partners
+# Configure a aplicação
+docker exec -it bi-ufgd-app php artisan key:generate
+docker exec -it bi-ufgd-app php artisan migrate
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# Inicie as filas
+docker exec -it bi-ufgd-app php artisan queue:work --queue=exec,build,validate
+```
 
-## Contributing
+### Local
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+# Clone e configure
+git clone <repositorio>
+cd bi-ufgd
+cp .env.example .env
 
-## Code of Conduct
+# Configure o .env com suas credenciais
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Instale dependências
+composer install
 
-## Security Vulnerabilities
+# Configure a aplicação
+php artisan key:generate
+php artisan migrate
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Inicie o servidor
+php artisan serve
 
-## License
+# Inicie as filas (em outro terminal)
+php artisan queue:work --queue=exec,build,validate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Filas
+
+```bash
+# Iniciar workers
+php artisan queue:work --queue=exec,build,validate
+
+# Ver jobs falhados
+php artisan queue:failed
+
+# Reprocessar job
+php artisan queue:retry {id}
+
+# Reprocessar todos
+php artisan queue:retry all
+
+# Reiniciar workers
+php artisan queue:restart
+```
+
+---
+
+## API Endpoints
+
+Base URL: `http://localhost:8080/api`
+
+### Auth
+
+#### Registrar
+
+```http
+POST /auth/register
+```
+
+```json
+{
+  "name": "Nome",
+  "email": "email@example.com",
+  "password": "senha",
+  "document": "000.000.000-00",
+  "entity_id": 1
+}
+```
+
+#### Login
+
+```http
+POST /auth
+```
+
+```json
+{
+  "email": "email@example.com",
+  "password": "senha"
+}
+```
+
+---
+
+### Connection
+
+#### Criar
+
+```http
+POST /connection
+```
+
+```json
+{
+  "name": "graduacao",
+  "connection": {
+    "host": "mysql",
+    "port": "3306",
+    "user": "root",
+    "password": "root-pass",
+    "type": "mysql",
+    "database": "dw_ufgd_graduacao"
+  },
+  "tables": [
+    {
+      "type": "dimension",
+      "name": "dimensao_curso",
+      "alias": "d_cur",
+      "columns": {
+        "chave_curso": "number:pk",
+        "curso": "string"
+      }
+    },
+    {
+      "type": "fact",
+      "name": "fato",
+      "alias": "fto",
+      "columns": {
+        "chave_curso": "number:fk:dimensao_curso.chave_curso",
+        "media_aproveitamento": "number"
+      }
+    }
+  ]
+}
+```
+
+#### Atualizar
+
+```http
+PATCH /connection/{id}
+```
+
+#### Listar
+
+```http
+GET /connection
+```
+
+#### Estrutura
+
+```http
+GET /connection/{name}/struct
+GET /connection/{name}/fact
+```
+
+#### Dados Dimensão
+
+```http
+GET /connection/{id}/dimension?table={table}&page=1&perPage=15
+```
+
+---
+
+### Query
+
+#### Criar
+
+```http
+POST /querry
+```
+
+```json
+{
+  "connectionName": "graduacao",
+  "description": "Descrição",
+  "fact": {
+    "limit": 100,
+    "columns": {
+      "media_aproveitamento": {
+        "name": "media_aproveitamento",
+        "aggregates": ["avg"],
+        "alias": {
+          "avg": "Media"
+        }
+      }
+    }
+  },
+  "dimensions": [
+    {
+      "table": "dimensao_curso",
+      "columns": ["curso"]
+    }
+  ],
+  "sub-dimension": []
+}
+```
+
+**Agregações:** `sum`, `avg`, `count`, `min`, `max`, `:list`
+
+**Operadores:** `=`, `>`, `<`, `>=`, `<=`, `:range`, `:in`
+
+#### Atualizar
+
+```http
+PATCH /querry/{id}
+```
+
+#### Visualizar SQL
+
+```http
+GET /querry/{id}
+```
+
+#### Build PreSQL
+
+```http
+GET /querry/build/{id}
+```
+
+#### Resultado
+
+```http
+GET /querry/result/{uuid}
+```
+
+#### Listar por Conexão
+
+```http
+GET /querry/by-connection/{connection_id}
+```
+
+---
+
+## Exemplos
+
+### Query com Filtro
+
+```json
+{
+  "connectionName": "graduacao",
+  "description": "Média últimos 10 anos",
+  "fact": {
+    "limit": 100,
+    "columns": {
+      "media_aproveitamento": {
+        "name": "media_aproveitamento",
+        "aggregates": ["avg"]
+      }
+    }
+  },
+  "dimensions": [
+    {
+      "table": "dimensao_tempo",
+      "columns": ["disciplina_ano"],
+      "filter": {
+        "disciplina_ano": {
+          "op": ":range",
+          "value": [2013, 2022]
+        }
+      }
+    }
+  ]
+}
+```
+
+### Query com Sub-dimensão
+
+```json
+{
+  "connectionName": "graduacao",
+  "description": "Matriculados por faixa etária",
+  "fact": {
+    "limit": 100,
+    "columns": {
+      "numero_estudantes": {
+        "name": "numero_estudantes",
+        "aggregates": ["sum"]
+      }
+    }
+  },
+  "dimensions": [],
+  "sub-dimension": [
+    {
+      "table": "dimensao_faixa_etaria",
+      "columns": ["faixa_etaria"]
+    }
+  ]
+}
+```
+
+---
+
+## Comandos Úteis
+
+```bash
+# Cache
+php artisan cache:clear
+php artisan config:clear
+php artisan optimize:clear
+
+# Migrations
+php artisan migrate
+php artisan migrate:rollback
+
+# Docker
+docker-compose up -d
+docker-compose down
+docker-compose logs -f
+docker exec -it bi-ufgd-app bash
+```

@@ -43,7 +43,7 @@ class QuerryRequest extends FormRequest
             'sub-dimension' => ['sometimes', 'array'],
             'sub-dimension.*.table' => ['required_with:sub-dimension', 'string'],
             'sub-dimension.*.columns' => ['sometimes', 'array'],
-            'sub-dimension.*.parent' => ['sometimes', 'string']
+            'sub-dimension.*.parent' => ['sometimes']
         ];
     }
 
@@ -91,8 +91,7 @@ class QuerryRequest extends FormRequest
             'sub-dimension.*.table.string' => 'O campo table em sub-dimension deve ser uma string.',
             'sub-dimension.*.columns.required_with' => 'O campo columns é obrigatório em sub-dimension.',
             'sub-dimension.*.columns.array' => 'O campo columns em sub-dimension deve ser um array.',
-            'sub-dimension.*.columns.min' => 'O campo columns em sub-dimension deve ter pelo menos 1 item.',
-            'sub-dimension.*.parent.string' => 'O caminho pelo parent tem que ser string'
+            'sub-dimension.*.columns.min' => 'O campo columns em sub-dimension deve ter pelo menos 1 item.'
         ];
     }
 }
