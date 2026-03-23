@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   php:
     build:
@@ -7,6 +5,12 @@ services:
     container_name: bi-ufgd-app
     restart: unless-stopped
     user: "${UID:-1000}:${GID:-1000}"
+    stdin_open: true  
+    tty: true
+    environment:
+      TERM: xterm-256color
+      HOME: /var/www
+
     volumes:
       - ./:/var/www/html
       - ./.docker/php8/local.ini:/usr/local/etc/php/local.ini

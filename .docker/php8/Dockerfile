@@ -1,16 +1,25 @@
-# Base image
+# Base image (Debian-based já)
 FROM php:8.4-apache
 
-# Argumentos para receber o ID do usuário e do grupo da sua máquina
-# O valor padrão 1000 é usado se nada for passado
+# Args de usuário
 ARG UID=1000
 ARG GID=1000
 
-# Set working directory
+# Define bash como shell padrão
+SHELL ["/bin/bash", "-c"]
+
+# Diretório da app
 WORKDIR /var/www/html
 
-# Instalar dependências e extensões PHP em uma única camada para otimização
+# Variáveis de ambiente importantes pro terminal
+ENV TERM=xterm-256color
+ENV HOME=/var/www
+
+# Instala dependências + bash completo
 RUN apt-get update && apt-get install -y \
+    bash \
+    bash-completion \
+    readline-common \
     build-essential \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -19,36 +28,53 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     zip unzip git curl vim locales \
     jpegoptim optipng pngquant gifsicle \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-install pcntl bcmath exif soap pdo pdo_mysql pdo_pgsql pgsql \
-    && docker-php-ext-configure gd --enable-gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ \
-    && docker-php-ext-install gd \
-    && pecl install redis && docker-php-ext-enable redis
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalar XDebug
+# Extensões PHP
+RUN docker-php-ext-install \
+    pcntl bcmath exif soap \
+    pdo pdo_mysql pdo_pgsql pgsql
+
+# GD
+RUN docker-php-ext-configure gd \
+    --enable-gd \
+    --with-freetype=/usr/include/ \
+    --with-jpeg=/usr/include/ \
+    && docker-php-ext-install gd
+
+# Redis
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Xdebug
 RUN yes | pecl install xdebug \
     && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/xdebug.ini
 
-# Instalar Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Composer
+RUN curl -sS https://getcomposer.org/installer | php \
+    -- --install-dir=/usr/local/bin --filename=composer
 
-# --- A MÁGICA PARA RESOLVER AS PERMISSÕES ---
-# Modifica o usuário 'www-data' existente (que o Apache usa)
-# para ter o mesmo ID do seu usuário na máquina host.
+# Ajusta usuário www-data pro host
 RUN groupmod -g ${GID} www-data \
     && usermod -u ${UID} -g www-data www-data
 
-# Habilitar mod_rewrite do Apache
+# Cria HOME funcional (resolve histórico)
+RUN mkdir -p /var/www \
+    && chown -R www-data:www-data /var/www
+
+# Bash config (histórico + autocomplete)
+RUN echo "export HISTFILE=/var/www/.bash_history" >> /etc/bash.bashrc && \
+    echo "export HISTSIZE=10000" >> /etc/bash.bashrc && \
+    echo "export HISTFILESIZE=20000" >> /etc/bash.bashrc && \
+    echo "bind '\"\\e[A\": history-search-backward'" >> /etc/bash.bashrc && \
+    echo "bind '\"\\e[B\": history-search-forward'" >> /etc/bash.bashrc
+
+# Apache
 RUN a2enmod rewrite
 
-# Copiar configs PHP (assumindo que estão no mesmo diretório do Dockerfile)
+# PHP config
 COPY local.ini /usr/local/etc/php/
 
-# Expor porta do Apache
+# Porta
 EXPOSE 80
-
-# Define o usuário padrão do contêiner como www-data.
-# Como já ajustamos o ID dele, tudo funcionará perfeitamente.
-USER www-data
