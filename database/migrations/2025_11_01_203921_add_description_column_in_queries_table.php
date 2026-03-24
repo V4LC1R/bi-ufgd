@@ -10,10 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('querries', 'description'))
-            Schema::table('querries', function (Blueprint $table) {
-                $table->text('description')->nullable();
-            });
+        // if (!Schema::hasColumn('querries', 'description'))
+        //     Schema::table('querries', function (Blueprint $table) {
+        //         $table->text('description')->nullable();
+        //     });
     }
 
     /**
@@ -21,9 +21,9 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        if (Schema::hasColumn('querries', 'description'))
-            Schema::table('querries', function (Blueprint $table) {
-                $table->dropColumn('description');
-            });
+        // if (Schema::hasColumn('querries', 'description'))
+        //     Schema::table('querries', function (Blueprint $table) {
+        //         $table->dropColumn('description');
+        //     });
     }
 };

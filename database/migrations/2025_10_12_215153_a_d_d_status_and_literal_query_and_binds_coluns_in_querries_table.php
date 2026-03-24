@@ -10,13 +10,13 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('querries', 'status')) {
-            Schema::table('querries', function (Blueprint $table) {
-                $table->string('status')->nullable(false)->default('pending');
-                $table->text('literal_query')->nullable(true);
-                $table->jsonb('binds')->nullable(true)->default(json_encode([]));
-            });
-        }
+        // if (!Schema::hasColumn('querries', 'status')) {
+        //     Schema::table('querries', function (Blueprint $table) {
+        //         $table->string('status')->nullable(false)->default('pending');
+        //         $table->text('literal_query')->nullable(true);
+        //         $table->jsonb('binds')->nullable(true)->default(json_encode([]));
+        //     });
+        // }
 
     }
 
@@ -25,10 +25,10 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        if (Schema::hasColumn('querries', 'status')) {
-            Schema::table('querries', function (Blueprint $table) {
-                $table->dropColumn(['status', 'literal_query', 'binds']);
-            });
-        }
+        // if (Schema::hasColumn('querries', 'status')) {
+        //     Schema::table('querries', function (Blueprint $table) {
+        //         $table->dropColumn(['status', 'literal_query', 'binds']);
+        //     });
+        // }
     }
 };

@@ -24,7 +24,7 @@ services:
       - 'host.docker.internal:host-gateway'
 
   postgres:
-    image: postgres
+    image: postgres:17.9
     container_name: bi-ufgd-postgres
     restart: unless-stopped
     environment:
