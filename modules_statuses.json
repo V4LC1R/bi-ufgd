@@ -1,0 +1,9 @@
+{
+    "Query": true,
+    "Core": true,
+    "DataSource": true,
+    "Report": true,
+    "Execution": true,
+    "Auth": true,
+    "Schema": true
+}

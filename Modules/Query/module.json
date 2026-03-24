@@ -1,0 +1,11 @@
+{
+    "name": "Query",
+    "alias": "query",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Query\\Providers\\QueryServiceProvider"
+    ],
+    "files": []
+}

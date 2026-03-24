@@ -1,0 +1,11 @@
+{
+    "name": "Execution",
+    "alias": "execution",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Execution\\Providers\\ExecutionServiceProvider"
+    ],
+    "files": []
+}
