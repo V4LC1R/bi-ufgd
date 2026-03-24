@@ -16,18 +16,18 @@ class RouteServiceProvider extends ServiceProvider
 
     protected function mapModuleRoutes(): void
     {
-        $modulesPath = base_path('app/Modules');
-        $modules = File::directories($modulesPath);
+        // $modulesPath = base_path('app/Modules');
+        // $modules = File::directories($modulesPath);
 
-        foreach ($modules as $modulePath) {
-            $moduleName = basename($modulePath);
-            $routesPath = $modulePath . '/Routes';
+        // foreach ($modules as $modulePath) {
+        //     $moduleName = basename($modulePath);
+        //     $routesPath = $modulePath . '/Routes';
 
-            if (File::exists($routesPath . '/api.php')) {
-                Route::prefix('api/' . strtolower($moduleName))
-                    ->middleware('api')
-                    ->group($routesPath . '/api.php');
-            }
-        }
+        //     if (File::exists($routesPath . '/api.php')) {
+        //         Route::prefix('api/' . strtolower($moduleName))
+        //             ->middleware('api')
+        //             ->group($routesPath . '/api.php');
+        //     }
+        // }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Modules\Report\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller

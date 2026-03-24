@@ -19,10 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(StructTable::class, StructTableService::class);
-        $this->app->singleton(QueryExecutor::class, ExecuteSqlService::class);
-        $this->app->singleton(DynamicConnectionManager::class, RuntimeConnectionManager::class);
-        $this->app->singleton(FieldRelationResult::class, AfterExecutionProcessService::class);
+        // $this->app->singleton(StructTable::class, StructTableService::class);
+        // $this->app->singleton(QueryExecutor::class, ExecuteSqlService::class);
+        // $this->app->singleton(DynamicConnectionManager::class, RuntimeConnectionManager::class);
+        // $this->app->singleton(FieldRelationResult::class, AfterExecutionProcessService::class);
     }
 
     /**

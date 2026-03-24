@@ -2,7 +2,7 @@
 
 namespace Modules\Execution\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 
 class ExecutionController extends Controller
