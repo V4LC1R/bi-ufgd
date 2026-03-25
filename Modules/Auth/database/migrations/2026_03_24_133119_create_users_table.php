@@ -14,9 +14,20 @@ return new class extends Migration {
 
         Schema::create('auth.users', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable(false)->comment('Name user in the aplication');
-            $table->string('password')->nullable(false)->comment('Password to acess aplication');
-            $table->string('email')->nullable(true)->comment('Email to acess aplication');
+
+            $table->string('name')
+                ->nullable(false)
+                ->comment('Name user in the aplication');
+
+            $table->string('password')
+                ->nullable(false)
+                ->comment('Password to acess aplication');
+
+            $table->string('email')
+                ->nullable(true)
+                ->unique()
+                ->comment('Email to acess aplication');
+
             $table->timestamps();
         });
     }
