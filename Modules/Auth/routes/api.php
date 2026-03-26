@@ -5,7 +5,8 @@ use Modules\Auth\Http\Controllers\AuthController;
 use Modules\Auth\Http\Controllers\UserController;
 
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/', [AuthController::class, 'login']);
+Route::post('/user', [UserController::class, 'store']);
 
 Route::middleware(['auth:api'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout']);
@@ -13,6 +14,5 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 });
 
-Route::middleware([])->prefix('user')->group(function () {
-    Route::post('/', [UserController::class, 'store']);
-});
+
+

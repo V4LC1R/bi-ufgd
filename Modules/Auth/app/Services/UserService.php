@@ -35,6 +35,6 @@ class UserService
 
     private function isUniqueConstraint(QueryException $e): bool
     {
-        return ($e->errorInfo[1] ?? null) === 1062;
+        return in_array($e->getCode(), ['23505', '1062']);
     }
 }

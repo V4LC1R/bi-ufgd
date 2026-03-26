@@ -8,21 +8,17 @@ use Illuminate\Routing\Controller;
 class AuthController extends Controller
 {
 
-    public function __construct()
-    {
-        dd('bateu aqui');
-    }
     public function login()
     {
         $credentials = request(['email', 'password']);
 
-        $token = Auth::setTTL(600)->attempt();
+        $token = Auth::setTTL(600)->attempt($credentials);
 
         if (!$token) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return [];
+        return $this->respondWithToken($token);
     }
 
 
@@ -51,5 +47,14 @@ class AuthController extends Controller
     public function refresh()
     {
         return $this->respondWithToken(auth()->refresh());
+    }
+
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
     }
 }
