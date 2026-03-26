@@ -2,58 +2,59 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controller;
 
 class AuthController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
 
-        return response()->json([]);
+    public function login()
+    {
+        $credentials = request(['email', 'password']);
+
+        $token = Auth::setTTL(600)->attempt($credentials);
+
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return $this->respondWithToken($token);
+    }
+
+
+    public function me()
+    {
+        return response()->json(auth()->user());
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Log the user out (Invalidate the token).
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request)
+    public function logout()
     {
-        //
+        auth()->logout();
 
-        return response()->json([]);
+        return response()->json(['message' => 'Successfully logged out']);
     }
 
     /**
-     * Show the specified resource.
+     * Refresh a token.
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function refresh()
     {
-        //
-
-        return response()->json([]);
+        return $this->respondWithToken(auth()->refresh());
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    protected function respondWithToken($token)
     {
-        //
-
-        return response()->json([]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        //
-
-        return response()->json([]);
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
     }
 }

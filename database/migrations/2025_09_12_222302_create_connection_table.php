@@ -10,17 +10,17 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('connections', function (Blueprint $table) {
-            $table->id();
-            $table->string("name")->nullable()->unique();
-            $table->string("host")->nullable();
-            $table->string("user")->nullable();
-            $table->string("password")->nullable();
-            $table->string("database")->nullable();
-            $table->string("type")->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Schema::create('connections', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string("name")->nullable()->unique();
+        //     $table->string("host")->nullable();
+        //     $table->string("user")->nullable();
+        //     $table->string("password")->nullable();
+        //     $table->string("database")->nullable();
+        //     $table->string("type")->nullable();
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
     }
 
     /**
@@ -28,6 +28,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('connections');
+        //Schema::dropIfExists('connections');
     }
 };

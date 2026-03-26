@@ -10,10 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('querries', 'error_message'))
-            Schema::table('querries', function (Blueprint $table) {
-                $table->text('error_message')->nullable();
-            });
+        // if (!Schema::hasColumn('querries', 'error_message'))
+        //     Schema::table('querries', function (Blueprint $table) {
+        //         $table->text('error_message')->nullable();
+        //     });
     }
 
     /**
@@ -21,9 +21,9 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        if (Schema::hasColumn('querries', 'error_message'))
-            Schema::table('querries', function (Blueprint $table) {
-                $table->dropColumn('error_message');
-            });
+        // if (Schema::hasColumn('querries', 'error_message'))
+        //     Schema::table('querries', function (Blueprint $table) {
+        //         $table->dropColumn('error_message');
+        //     });
     }
 };
