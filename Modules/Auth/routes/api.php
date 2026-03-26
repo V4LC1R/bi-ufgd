@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Auth\Http\Controllers\AuthController;
 use Modules\Auth\Http\Controllers\UserController;
 
-
 Route::post('/', [AuthController::class, 'login']);
 Route::post('/user', [UserController::class, 'store']);
 
