@@ -4,6 +4,7 @@ namespace Modules\Auth\Services;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Data\CreateUserData;
 use Modules\Auth\Exceptions\UserAlreadyExistsException;
 use Modules\Auth\Models\User;
@@ -15,7 +16,10 @@ class UserService
         try {
             return DB::transaction(function () use ($dto) {
 
-                $user = User::create($dto->toArray());
+                $data = $dto->toArray();
+                $data['password'] = Hash::make($dto->password);
+
+                $user = User::create($data);
 
                 return $user;
             });
@@ -31,6 +35,6 @@ class UserService
 
     private function isUniqueConstraint(QueryException $e): bool
     {
-        return str_contains($e->getMessage(), 'unique');
+        return ($e->errorInfo[1] ?? null) === 1062;
     }
 }

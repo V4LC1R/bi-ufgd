@@ -14,9 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->group('', [
+        $middleware->group('api', [
             ForceJsonResponse::class,
         ]);
+        $middleware->redirectGuestsTo(fn() => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            return response()->json([
+                'error' => 'unauthenticated'
+            ], 401);
+        });
     })->create();

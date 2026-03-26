@@ -8,6 +8,10 @@ use Illuminate\Routing\Controller;
 class AuthController extends Controller
 {
 
+    public function __construct()
+    {
+        dd('bateu aqui');
+    }
     public function login()
     {
         $credentials = request(['email', 'password']);

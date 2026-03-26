@@ -24,7 +24,7 @@ class UserRequest extends FormRequest
                     ->numbers()
                     ->symbols()
             ],
-            'email' => ['required', 'email', 'unique:users,email']
+            'email' => ['required', 'email']
         ];
     }
 
