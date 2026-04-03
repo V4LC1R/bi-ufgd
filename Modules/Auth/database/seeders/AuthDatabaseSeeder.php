@@ -11,6 +11,10 @@ class AuthDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        (new RolesAndPermissionsSeeder())->run();
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+            BaseAccountAccess::class,
+        ]);
+
     }
 }
