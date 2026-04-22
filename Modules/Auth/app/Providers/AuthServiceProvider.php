@@ -32,7 +32,10 @@ class AuthServiceProvider extends ModuleServiceProvider
     protected array $providers = [
         EventServiceProvider::class,
         RouteServiceProvider::class,
+        AuthPolicyServiceProvider::class,
     ];
+
+
 
     /**
      * Define module schedules.

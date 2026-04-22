@@ -9,9 +9,9 @@ class RouteServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        $this->routes(function () {
-            $this->mapModuleRoutes();
-        });
+        // $this->routes(function () {
+        //     $this->mapModuleRoutes();
+        // });
     }
 
     protected function mapModuleRoutes(): void

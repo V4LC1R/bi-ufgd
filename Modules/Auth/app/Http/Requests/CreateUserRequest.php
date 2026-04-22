@@ -4,12 +4,23 @@ namespace Modules\Auth\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rules\Enum;
+use Modules\Auth\Data\CreateUserData;
+use Modules\Auth\Enums\RoleEnum;
 
-class UserRequest extends FormRequest
+class CreateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // ou lógica de auth se precisar
+        $user = $this->route('user');
+
+        return $this->user()->can(
+            'create',
+            [
+                $user,
+                RoleEnum::from($this->input('role'))
+            ]
+        );
     }
 
     public function rules(): array
@@ -24,7 +35,8 @@ class UserRequest extends FormRequest
                     ->numbers()
                     ->symbols()
             ],
-            'email' => ['required', 'email']
+            'email' => ['required', 'email'],
+            'role' => ['required', new Enum(RoleEnum::class)]
         ];
     }
 
@@ -39,6 +51,11 @@ class UserRequest extends FormRequest
             'email.required' => 'User needs an email to access reports',
             'email.email' => 'Please provide a valid email address',
         ];
+    }
+
+    public function toDto(): CreateUserData
+    {
+        return CreateUserData::from($this->validated());
     }
 
 }
